@@ -38,7 +38,7 @@ Documentation = "https://jwallace145.github.io/cs-survival-guide/"
 Changelog = "https://github.com/jwallace145/cs-survival-kit/blob/main/CHANGELOG.md"
 
 [dependency-groups]
-dev = ["hypothesis", "pyright", "pytest", "ruff"]
+dev = ["hypothesis", "pre-commit", "pyright", "pytest", "ruff"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cs_survival_kit"]
@@ -48,6 +48,10 @@ include = ["/src", "/tests", "/benchmarks", "/scripts", "/README.md", "/LICENSE"
 
 [tool.ruff]
 src = ["src", "scripts"]
+# The line-length standard for all Python files. `ruff format` wraps code to
+# it; `ruff check` (E501) reports any line that is still longer, including
+# docstrings and comments. Keep in sync with .editorconfig.
+line-length = 88
 
 [tool.ruff.format]
 # Only format Python sources; leave code blocks in markdown as written.

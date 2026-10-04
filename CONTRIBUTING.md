@@ -96,6 +96,10 @@ class, not on `__init__`.
 CI runs `ruff check`, `ruff format --check`, `pyright`, `pytest` (including
 doctests over `src/`), `scripts/check_docs.py`, and `uv build`. All must pass.
 
+Python lines are limited to 88 characters, checked by `ruff check`. Run
+`uv run pre-commit install` once to have ruff lint and format your files on
+every commit; see the README for details.
+
 `scripts/check_docs.py` enforces two rules over the study modules:
 
 1. Every public class has a `Complexity:` section in its docstring.

@@ -1,0 +1,21 @@
+# Git hooks that run before each commit. Enable them once per clone with:
+#
+#   uv run pre-commit install
+#
+# The hooks call the project's own ruff (pinned in uv.lock), so a commit is
+# checked by exactly the same version that CI uses.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (lint, auto-fix)
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true

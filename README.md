@@ -120,6 +120,31 @@ uv build                         # sdist and wheel into dist/
 
 All of these run in CI and must pass before a PR can merge.
 
+### Formatting and line length
+
+Python lines are limited to 88 characters. Two commands fix almost everything
+automatically:
+
+```bash
+uv run ruff check --fix          # sort imports and apply safe lint fixes
+uv run ruff format               # reformat code to the line-length standard
+```
+
+To run both on every commit, enable the git hooks once per clone:
+
+```bash
+uv run pre-commit install
+```
+
+A commit is then stopped if ruff changed a file or found something it could
+not fix; review the changes, `git add` them, and commit again.
+
+`ruff format` rewraps code, but it never rewraps the prose inside docstrings
+or comments. A docstring line that is too long is reported (rule `E501`) and
+has to be wrapped in the editor. The repository's `.editorconfig` sets the
+editor's margin to 88, so "reflow paragraph" commands (PyCharm: **Edit → Fill
+Paragraph**) wrap to the right width.
+
 ## Releases
 
 cs-survival-kit uses [Conventional Commits](https://www.conventionalcommits.org)
