@@ -143,6 +143,12 @@ and maintains a release PR that accumulates changes. Merging that PR:
 
 The version and changelog are never edited by hand.
 
+The publishing pipeline can be rehearsed without releasing anything: running
+the **Publish to TestPyPI** workflow from the Actions tab builds `main` as a
+throwaway `0.0.0.devN` version, publishes it to
+[TestPyPI](https://test.pypi.org/project/cs-survival-kit/), and installs it
+back.
+
 ### Commit examples
 
 ```text
