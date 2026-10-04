@@ -1,0 +1,23 @@
+# Editor settings shared by everyone who opens the project. PyCharm, VS Code
+# and most other editors read this file automatically.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.py]
+indent_style = space
+indent_size = 4
+# Keep in sync with line-length in pyproject.toml. Editors draw their margin
+# guide here and wrap to it when asked to reflow a paragraph.
+max_line_length = 88
+
+[*.{yml,yaml,json,toml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
