@@ -29,13 +29,80 @@ Structures land one at a time. A module whose functions still raise
 
 ## Benchmarks
 
-The package will ship a stdlib-only benchmarking toolkit
-(`cs_survival_kit.bench`) for measuring how each structure scales and
-checking the result against its documented complexity. Usage examples will
-be added here when the toolkit lands.
+`cs_survival_kit.bench` is a small, stdlib-only toolkit for measuring how code
+scales with input size, and for checking the result against the complexity a
+docstring claims.
 
-Published benchmark numbers come from a single development machine, never
-from CI, and ship inside the package as `cs_survival_kit/_data/benchmarks.json`.
+### Write a benchmark
+
+A benchmark is a set of cases to compare across a range of sizes. Each case
+has a `setup(n)` that builds the inputs (not timed) and a `run(inputs)` that
+is timed:
+
+```python
+# benchmarks/bench_sorting.py
+from cs_survival_kit.bench import Benchmark
+
+
+def bubble_sort(items: list[int]) -> None:
+    for end in range(len(items) - 1, 0, -1):
+        for i in range(end):
+            if items[i] > items[i + 1]:
+                items[i], items[i + 1] = items[i + 1], items[i]
+
+
+sorting = Benchmark("sorting", sizes=[100, 200, 400, 800])
+sorting.case("bubble sort", setup=lambda n: list(range(n, 0, -1)), run=bubble_sort)
+sorting.case("list.sort", setup=lambda n: list(range(n, 0, -1)), run=list.sort)
+
+BENCHMARKS = [sorting]
+```
+
+`setup` is called again before every timed call, so `run` may mutate its
+inputs. A case can pass its own `sizes=` to cap a slow implementation at
+smaller inputs. A case that raises `NotImplementedError` is reported as
+`not implemented` and skipped, so a benchmark can be written before the code
+it measures.
+
+### Run it
+
+```bash
+python -m cs_survival_kit.bench                               # every benchmarks/bench_*.py
+python -m cs_survival_kit.bench benchmarks/bench_sorting.py   # just one file
+python -m cs_survival_kit.bench --smoke                       # check they execute; write nothing
+```
+
+```text
+sorting
+     n  bubble sort  list.sort
+   100  140 µs       256 ns
+   200  546 µs       472 ns
+   400  2.28 ms      905 ns
+   800  10.4 ms      1.74 µs
+ slope  2.07         0.92
+growth  ~ quadratic  ~ linear
+```
+
+Each time is per call: the minimum of 5 measurements, with garbage collection
+disabled, looping fast calls until a measurement lasts about 0.1 seconds.
+
+`slope` is the least-squares slope of time against size on a log-log scale,
+which approximates the exponent `k` in `O(n^k)`: about 0 is constant, about 1
+is linear, about 2 is quadratic. `O(n log n)` reads as slightly above 1. It is
+an empirical sanity check, not a proof.
+
+A benchmark can also be driven from Python: `results = sorting.run(repeat=5)`,
+then `results.table()`, `results.fit()` or `results.to_dict()`.
+
+### Stored results
+
+A full run merges its results into
+`src/cs_survival_kit/_data/benchmarks.json` (or `--output FILE`), keyed by
+benchmark name, so re-running one file updates only its own entries. That file
+ships inside the package.
+
+Published numbers come from a single development machine, never from CI:
+shared runners are too noisy. CI only runs `--smoke`.
 
 ## Local development
 
@@ -47,6 +114,7 @@ uv run ruff format --check       # formatting
 uv run pyright                   # type check
 uv run python scripts/check_docs.py   # docs-completeness check
 uv run pytest                    # tests and doctests
+uv run python -m cs_survival_kit.bench --smoke   # benchmarks execute
 uv build                         # sdist and wheel into dist/
 ```
 
