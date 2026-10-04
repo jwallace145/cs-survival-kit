@@ -1,0 +1,42 @@
+# Quality gates: every check here must pass before a PR can merge.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pyright
+      - run: uv run python scripts/check_docs.py
+      - run: uv run pytest
+      - run: uv build
+      - name: Verify the built wheel
+        run: |
+          unzip -l dist/*.whl | grep -q 'cs_survival_kit/_data/benchmarks.json'
+          unzip -l dist/*.whl | grep -q 'cs_survival_kit/py.typed'
+          uv run --isolated --no-project --with dist/*.whl \
+            python -c "import cs_survival_kit; print(cs_survival_kit.__version__)"

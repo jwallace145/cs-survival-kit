@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cs-survival-kit"
+# Managed by Release Please. Do not edit by hand.
+version = "0.0.0"
+description = "Hand-written data structures and algorithms, plus a benchmarking toolkit."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Jimmy Wallace" }]
+keywords = ["algorithms", "data-structures", "benchmarking", "education"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Education",
+  "Topic :: Software Development :: Libraries",
+  "Typing :: Typed",
+]
+# The core package has zero runtime dependencies. Keep it that way.
+dependencies = []
+
+[project.optional-dependencies]
+bench = []
+
+[project.urls]
+Repository = "https://github.com/jwallace145/cs-survival-kit"
+Documentation = "https://jwallace145.github.io/cs-survival-guide/"
+Changelog = "https://github.com/jwallace145/cs-survival-kit/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = ["hypothesis", "pyright", "pytest", "ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cs_survival_kit"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/benchmarks", "/scripts", "/README.md", "/LICENSE", "/CHANGELOG.md"]
+
+[tool.ruff]
+src = ["src", "scripts"]
+
+[tool.ruff.format]
+# Only format Python sources; leave code blocks in markdown as written.
+exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "D"]
+# Constructor args are documented on the class, not on __init__.
+ignore = ["D107"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.pyright]
+include = ["src", "scripts", "tests", "benchmarks"]
+strict = ["src"]
+extraPaths = ["scripts"]
+pythonVersion = "3.12"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["src", "tests"]
+pythonpath = ["scripts"]
