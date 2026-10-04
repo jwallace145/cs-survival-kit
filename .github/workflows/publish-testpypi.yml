@@ -1,0 +1,67 @@
+# Pipeline dry run: builds main with a throwaway dev version and publishes it
+# to TestPyPI, then installs it back. Run by hand from the Actions tab. The
+# version override is never committed.
+name: Publish to TestPyPI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DEV_VERSION: 0.0.0.dev${{ github.run_number }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: astral-sh/setup-uv@v10.2.0  # no moving major tag is published
+      - run: uv version --frozen "$DEV_VERSION"
+      - run: uv build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/cs-survival-kit/${{ env.DEV_VERSION }}/
+    permissions:
+      id-token: write  # trusted publishing; no API token is stored anywhere
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  verify:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astral-sh/setup-uv@v10.2.0  # no moving major tag is published
+      - name: Install from TestPyPI and import
+        run: |
+          # A new upload can take a moment to appear in the index.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if uv run --no-project --python 3.12 --refresh \
+              --index https://test.pypi.org/simple/ \
+              --with "cs-survival-kit==$DEV_VERSION" \
+              python -c "import cs_survival_kit; print(cs_survival_kit.__version__)"; then
+              exit 0
+            fi
+            echo "Attempt $attempt: not available yet; retrying in 15s"
+            sleep 15
+          done
+          echo "::error::cs-survival-kit==$DEV_VERSION never became installable from TestPyPI"
+          exit 1

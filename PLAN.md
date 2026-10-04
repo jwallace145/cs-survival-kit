@@ -26,7 +26,9 @@ Listed so the agent knows which credentials will exist.
 1. Create the `cs-survival-kit` repo (public) and protect `main`: require PRs and passing CI.
 2. Create a **GitHub App** (e.g. `jwallace145-release-bot`) with repository permissions *Contents:
    read & write*, *Pull requests: read & write*, *Metadata: read*. Install it on **both** repos.
-3. In **both** repos, add variable `RELEASE_APP_ID` and secret `RELEASE_APP_PRIVATE_KEY`.
+3. In **both** repos, add secrets `RELEASE_APP_CLIENT_ID` (the App's **Client ID**, e.g. `Iv23...`,
+   not its numeric App ID: `actions/create-github-app-token@v3` deprecates the `app-id` input) and
+   `RELEASE_APP_PRIVATE_KEY`.
 4. In the library repo, create GitHub environments `pypi` and `testpypi`.
 5. On PyPI and TestPyPI, add a **pending trusted publisher**: project `cs-survival-kit`, owner
    `jwallace145`, repo `cs-survival-kit`, workflow `release.yml` / environment `pypi` (PyPI) and workflow
