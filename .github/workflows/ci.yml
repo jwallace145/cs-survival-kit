@@ -41,6 +41,8 @@ jobs:
         if: matrix.python-version == '3.13'
         uses: codecov/codecov-action@v7
         with:
+          # Install the uploader from PyPI rather than cli.codecov.io.
+          use_pypi: true
           use_oidc: true
           files: coverage.xml
           disable_search: true
