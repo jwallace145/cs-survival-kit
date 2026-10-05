@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.3.0...v0.4.0) (2026-10-05)
+
+
+### Features
+
+* **bench:** add per-item timings and more dynamic array cases ([#13](https://github.com/jwallace145/cs-survival-kit/issues/13)) ([ec26e11](https://github.com/jwallace145/cs-survival-kit/commit/ec26e1179275e2f22d49ff6d85e7691bf2436f30))
+
 ## [0.3.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.2.0...v0.3.0) (2026-10-05)
 
 
