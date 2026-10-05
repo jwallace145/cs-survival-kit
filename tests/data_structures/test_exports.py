@@ -2,6 +2,13 @@ import cs_survival_kit.data_structures as data_structures
 from cs_survival_kit.data_structures import dynamic_array
 
 
+def test_abstract_list_is_exported_from_the_package():
+    from cs_survival_kit.data_structures import AbstractList, abstract_list
+
+    assert "AbstractList" in data_structures.__all__
+    assert AbstractList is abstract_list.AbstractList
+
+
 def test_dynamic_array_names_are_exported_from_the_package():
     for name in ["DynamicArray", "GrowthPolicy", "additive", "doubling", "geometric"]:
         assert name in data_structures.__all__
