@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.1.0...v0.2.0) (2026-10-05)
+
+
+### Features
+
+* **ds:** add dynamic array ([#9](https://github.com/jwallace145/cs-survival-kit/issues/9)) ([f5ac6c0](https://github.com/jwallace145/cs-survival-kit/commit/f5ac6c070007784cb7eede8ddaace9bf9a972a0f))
+
+
+### Miscellaneous
+
+* **repo:** add pre-commit hooks and an explicit line-length standard ([#6](https://github.com/jwallace145/cs-survival-kit/issues/6)) ([9abfd51](https://github.com/jwallace145/cs-survival-kit/commit/9abfd51052203ed20f27bf4cf2238600e1792ea5))
+* **repo:** ignore PyCharm project settings ([#5](https://github.com/jwallace145/cs-survival-kit/issues/5)) ([4cdffb9](https://github.com/jwallace145/cs-survival-kit/commit/4cdffb90ed119beaea634579763a6079dc11e213))
+
 ## 0.1.0 (2026-10-04)
 
 
