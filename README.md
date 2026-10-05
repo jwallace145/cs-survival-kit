@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/jwallace145/cs-survival-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/jwallace145/cs-survival-kit/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/jwallace145/cs-survival-kit/graph/badge.svg)](https://codecov.io/gh/jwallace145/cs-survival-kit)
-[![PyPI](https://img.shields.io/pypi/v/cs-survival-kit)](https://pypi.org/project/cs-survival-kit/)
+[![PyPI](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpypi.org%2Fpypi%2Fcs-survival-kit%2Fjson&query=%24.info.version&prefix=v&label=PyPI&color=blue)](https://pypi.org/project/cs-survival-kit/)
 
 Hand-written data structures and algorithms in Python, plus a small toolkit
 for benchmarking them.
