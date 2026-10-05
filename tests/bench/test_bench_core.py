@@ -138,6 +138,18 @@ def test_gc_is_disabled_during_the_timed_call_and_restored(clock: FakeClock):
     assert gc.isenabled()
 
 
+def test_gc_stays_disabled_if_it_was_disabled_before_the_run(clock: FakeClock):
+    bench = Benchmark("fake", sizes=[1])
+    bench.case("case", setup=lambda n: n, run=lambda n: clock.advance(10**9))
+
+    gc.disable()
+    try:
+        bench.run(repeat=1)
+        assert not gc.isenabled()
+    finally:
+        gc.enable()
+
+
 def test_gc_is_restored_when_a_case_raises(clock: FakeClock):
     def run(n: int) -> None:
         raise RuntimeError("boom")

@@ -38,7 +38,7 @@ Documentation = "https://jwallace145.github.io/cs-survival-guide/"
 Changelog = "https://github.com/jwallace145/cs-survival-kit/blob/main/CHANGELOG.md"
 
 [dependency-groups]
-dev = ["hypothesis", "pre-commit", "pyright", "pytest", "ruff"]
+dev = ["hypothesis", "pre-commit", "pyright", "pytest", "pytest-cov", "ruff"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cs_survival_kit"]
@@ -73,6 +73,22 @@ include = ["src", "scripts", "tests", "benchmarks"]
 strict = ["src"]
 extraPaths = ["scripts"]
 pythonVersion = "3.12"
+
+[tool.coverage.run]
+source = ["cs_survival_kit"]
+branch = true
+# Only ever run as `python -m cs_survival_kit.bench`; its logic lives in cli.py.
+omit = ["*/bench/__main__.py"]
+
+[tool.coverage.report]
+# `pytest --cov` fails below this. Codecov applies the same bar to each PR.
+fail_under = 95
+show_missing = true
+skip_covered = true
+exclude_also = [
+  # Study-module stubs awaiting their implementation.
+  "raise NotImplementedError",
+]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"

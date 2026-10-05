@@ -103,3 +103,23 @@ def test_errors_exit_2(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     bad.write_text("BENCHMARKS = 'nope'")
     assert cli.main([str(bad), "--smoke"]) == 2
     assert "BENCHMARKS" in capsys.readouterr().err
+
+
+def test_file_that_cannot_be_imported_exits_2(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    not_python = tmp_path / "bench_demo.txt"
+    not_python.write_text("BENCHMARKS = []")
+
+    assert cli.main([str(not_python), "--smoke"]) == 2
+    assert "cannot be imported" in capsys.readouterr().err
+
+
+def test_benchmarks_list_with_a_non_benchmark_exits_2(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    bad = tmp_path / "bench_bad.py"
+    bad.write_text("BENCHMARKS = ['not a benchmark']")
+
+    assert cli.main([str(bad), "--smoke"]) == 2
+    assert "only Benchmark objects" in capsys.readouterr().err
