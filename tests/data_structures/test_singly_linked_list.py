@@ -222,6 +222,219 @@ def test_getitem_follows_changes_at_the_front():
     assert items[0] == 1
 
 
+# --- Writing by index ---------------------------------------------------------
+
+
+@pytest.mark.parametrize("index", [0, 1, 2])
+def test_setitem_replaces_the_item_at_index(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    items[index] = 9
+
+    expected = [1, 2, 3]
+    expected[index] = 9
+    assert_consistent(items, expected)
+
+
+@pytest.mark.parametrize("index", [3, 4, 100])
+def test_setitem_rejects_index_not_less_than_length(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        items[index] = 9
+
+    assert list(items) == [1, 2, 3]
+
+
+@pytest.mark.parametrize("index", [-1, -3, -100])
+def test_setitem_rejects_negative_index(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        items[index] = 9
+
+    assert list(items) == [1, 2, 3]
+
+
+def test_setitem_on_empty_list_raises():
+    items = SinglyLinkedList[int]()
+
+    with pytest.raises(IndexError):
+        items[0] = 1
+
+
+def test_setitem_does_not_change_length():
+    items = SinglyLinkedList([1, 2, 3])
+
+    items[1] = 9
+
+    assert len(items) == 3
+
+
+# --- insert -------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("index", "expected"),
+    [(0, [9, 1, 2, 3]), (1, [1, 9, 2, 3]), (2, [1, 2, 9, 3]), (3, [1, 2, 3, 9])],
+    ids=["head", "second", "third", "tail"],
+)
+def test_insert_at_each_position(index: int, expected: list[int]):
+    items = SinglyLinkedList([1, 2, 3])
+
+    items.insert(index, 9)
+
+    assert_consistent(items, expected)
+
+
+def test_insert_into_an_empty_list():
+    items = SinglyLinkedList[int]()
+
+    items.insert(0, 1)
+
+    assert_consistent(items, [1])
+
+
+@pytest.mark.parametrize(("index", "expected"), [(0, [9, 1]), (1, [1, 9])])
+def test_insert_into_a_one_item_list(index: int, expected: list[int]):
+    items = SinglyLinkedList([1])
+
+    items.insert(index, 9)
+
+    assert_consistent(items, expected)
+
+
+@pytest.mark.parametrize("index", [4, 5, 100])
+def test_insert_rejects_index_greater_than_length(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        items.insert(index, 9)
+
+    assert_consistent(items, [1, 2, 3])
+
+
+@pytest.mark.parametrize("index", [-1, -3, -100])
+def test_insert_rejects_negative_index(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        items.insert(index, 9)
+
+    assert_consistent(items, [1, 2, 3])
+
+
+def test_insert_accepts_none_as_an_item():
+    items = SinglyLinkedList[int | None]([1, 2])
+
+    items.insert(1, None)
+
+    assert list(items) == [1, None, 2]
+
+
+# --- pop(index) ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("index", "expected"),
+    [(0, [2, 3, 4]), (1, [1, 3, 4]), (2, [1, 2, 4]), (3, [1, 2, 3])],
+    ids=["head", "second", "third", "tail"],
+)
+def test_pop_at_each_position(index: int, expected: list[int]):
+    items = SinglyLinkedList([1, 2, 3, 4])
+
+    assert items.pop(index) == index + 1
+    assert_consistent(items, expected)
+
+
+def test_pop_the_only_item_empties_the_list():
+    items = SinglyLinkedList([1])
+
+    assert items.pop(0) == 1
+    assert_consistent(items, [])
+
+
+@pytest.mark.parametrize(("index", "expected"), [(0, [2]), (1, [1])])
+def test_pop_from_a_two_item_list(index: int, expected: list[int]):
+    items = SinglyLinkedList([1, 2])
+
+    assert items.pop(index) == index + 1
+    assert_consistent(items, expected)
+
+
+@pytest.mark.parametrize("index", [3, 4, 100])
+def test_pop_rejects_index_not_less_than_length(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        items.pop(index)
+
+    assert_consistent(items, [1, 2, 3])
+
+
+@pytest.mark.parametrize("index", [-1, -3, -100])
+def test_pop_rejects_negative_index(index: int):
+    items = SinglyLinkedList([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        items.pop(index)
+
+    assert_consistent(items, [1, 2, 3])
+
+
+def test_pop_on_empty_list_raises():
+    with pytest.raises(IndexError, match="out of range"):
+        SinglyLinkedList[int]().pop(0)
+
+
+def test_pop_returns_a_stored_none():
+    items = SinglyLinkedList([1, None, 2])
+
+    assert items.pop(1) is None
+    assert list(items) == [1, 2]
+
+
+def test_pop_of_the_tail_releases_its_reference_to_the_item():
+    # A tail reference left pointing at the removed node would keep it alive.
+    class Token:
+        pass
+
+    token = Token()
+    reference = weakref.ref(token)
+    items = SinglyLinkedList([Token(), token])
+
+    assert items.pop(1) is token
+    del token
+    gc.collect()
+
+    assert reference() is None
+
+
+# --- pop_back -----------------------------------------------------------------
+
+
+def test_pop_back_returns_items_in_reverse_order():
+    items = SinglyLinkedList([1, 2, 3])
+
+    assert [items.pop_back() for _ in range(3)] == [3, 2, 1]
+    assert_consistent(items, [])
+
+
+def test_pop_back_on_empty_list_raises():
+    with pytest.raises(IndexError, match="pop_back from empty list"):
+        SinglyLinkedList[int]().pop_back()
+
+
+def test_append_works_after_the_list_was_emptied_by_pop_back():
+    items = SinglyLinkedList([1])
+    items.pop_back()
+
+    items.append(2)
+    items.prepend(1)
+
+    assert_consistent(items, [1, 2])
+
+
 # --- Membership ---------------------------------------------------------------
 
 
@@ -742,8 +955,21 @@ small_ints = st.integers(min_value=0, max_value=6)
 operations = st.lists(
     st.tuples(
         st.sampled_from(
-            ["append", "append", "prepend", "prepend", "pop_front", "remove", "reverse"]
+            [
+                "append",
+                "append",
+                "prepend",
+                "prepend",
+                "pop_front",
+                "pop_back",
+                "remove",
+                "reverse",
+                "insert",
+                "pop",
+                "set",
+            ]
         ),
+        st.integers(min_value=0, max_value=20),
         small_ints,
     ),
     max_size=120,
@@ -752,12 +978,12 @@ operations = st.lists(
 
 @given(initial=st.lists(small_ints, max_size=10), ops=operations)
 def test_behaves_like_a_reference_model_for_any_sequence_of_operations(
-    initial: list[int], ops: list[tuple[str, int]]
+    initial: list[int], ops: list[tuple[str, int, int]]
 ):
     items = SinglyLinkedList(initial)
     model: deque[int] = deque(initial)
 
-    for name, value in ops:
+    for name, index, value in ops:
         if name == "append":
             items.append(value)
             model.append(value)
@@ -773,6 +999,32 @@ def test_behaves_like_a_reference_model_for_any_sequence_of_operations(
             else:
                 with pytest.raises(IndexError):
                     items.pop_front()
+        elif name == "pop_back":
+            if model:
+                assert items.pop_back() == model.pop()
+            else:
+                with pytest.raises(IndexError):
+                    items.pop_back()
+        elif name == "insert":
+            position = index % (len(model) + 1)
+            items.insert(position, value)
+            model.insert(position, value)
+        elif name == "pop":
+            if model:
+                position = index % len(model)
+                assert items.pop(position) == model[position]
+                del model[position]
+            else:
+                with pytest.raises(IndexError):
+                    items.pop(index)
+        elif name == "set":
+            if model:
+                position = index % len(model)
+                items[position] = value
+                model[position] = value
+            else:
+                with pytest.raises(IndexError):
+                    items[index] = value
         elif value in model:
             items.remove(value)
             model.remove(value)

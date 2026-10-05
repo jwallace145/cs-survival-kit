@@ -314,7 +314,7 @@ def test_array_is_still_usable_after_a_rejected_growth_policy():
         array.append(3)
 
     array[0] = 10
-    assert array.pop() == 2
+    assert array.pop_back() == 2
     array.append(20)
 
     assert list(array) == [10, 20]
@@ -407,74 +407,74 @@ def test_setitem_on_empty_array_raises():
         array[0] = 1
 
 
-# --- pop ----------------------------------------------------------------------
+# --- pop_back -----------------------------------------------------------------
 
 
-def test_pop_returns_last_item():
+def test_pop_back_returns_last_item():
     array = filled([1, 2, 3])
 
-    assert array.pop() == 3
+    assert array.pop_back() == 3
 
 
-def test_pop_decreases_length_by_one():
+def test_pop_back_decreases_length_by_one():
     array = filled([1, 2, 3])
 
-    array.pop()
+    array.pop_back()
 
     assert len(array) == 2
     assert list(array) == [1, 2]
 
 
-def test_pop_returns_items_in_reverse_order():
+def test_pop_back_returns_items_in_reverse_order():
     array = filled([1, 2, 3, 4, 5])
 
-    assert [array.pop() for _ in range(5)] == [5, 4, 3, 2, 1]
+    assert [array.pop_back() for _ in range(5)] == [5, 4, 3, 2, 1]
     assert len(array) == 0
 
 
-def test_pop_on_new_array_raises():
-    with pytest.raises(IndexError, match="pop from empty array"):
-        DynamicArray[int]().pop()
+def test_pop_back_on_new_array_raises():
+    with pytest.raises(IndexError, match="pop_back from empty list"):
+        DynamicArray[int]().pop_back()
 
 
-def test_pop_after_removing_every_item_raises():
+def test_pop_back_after_removing_every_item_raises():
     array = filled([1])
-    array.pop()
+    array.pop_back()
 
-    with pytest.raises(IndexError, match="pop from empty array"):
-        array.pop()
+    with pytest.raises(IndexError, match="pop_back from empty list"):
+        array.pop_back()
 
 
-def test_pop_does_not_change_capacity():
+def test_pop_back_does_not_change_capacity():
     array = filled(list(range(100)), capacity=1)
     capacity = array.capacity
 
     while len(array) > 0:
-        array.pop()
+        array.pop_back()
 
     assert array.capacity == capacity
 
 
-def test_popped_index_is_no_longer_readable():
+def test_popped_back_index_is_no_longer_readable():
     array = filled([1, 2, 3])
 
-    array.pop()
+    array.pop_back()
 
     with pytest.raises(IndexError):
         array[2]
 
 
-def test_append_after_pop_reuses_the_freed_slot():
+def test_append_after_pop_back_reuses_the_freed_slot():
     array = filled([1, 2, 3, 4], capacity=4)
 
-    array.pop()
+    array.pop_back()
     array.append(40)
 
     assert array.capacity == 4
     assert list(array) == [1, 2, 3, 40]
 
 
-def test_pop_releases_its_reference_to_the_item():
+def test_pop_back_releases_its_reference_to_the_item():
     class Token:
         pass
 
@@ -483,11 +483,214 @@ def test_pop_releases_its_reference_to_the_item():
     reference = weakref.ref(token)
     array.append(token)
 
-    assert array.pop() is token
+    assert array.pop_back() is token
     del token
     gc.collect()
 
     assert reference() is None
+
+
+# --- insert -------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("index", "expected"),
+    [(0, [9, 1, 2, 3]), (1, [1, 9, 2, 3]), (2, [1, 2, 9, 3]), (3, [1, 2, 3, 9])],
+    ids=["front", "second", "third", "end"],
+)
+def test_insert_at_each_position_shifts_later_items_right(
+    index: int, expected: list[int]
+):
+    array = filled([1, 2, 3], capacity=8)
+
+    array.insert(index, 9)
+
+    assert list(array) == expected
+    assert len(array) == 4
+
+
+def test_insert_into_an_empty_array():
+    array = DynamicArray[int]()
+
+    array.insert(0, 1)
+
+    assert list(array) == [1]
+
+
+@pytest.mark.parametrize("index", [4, 5, 100])
+def test_insert_rejects_index_greater_than_length(index: int):
+    array = filled([1, 2, 3], capacity=8)
+
+    with pytest.raises(IndexError, match="out of range"):
+        array.insert(index, 9)
+
+    assert list(array) == [1, 2, 3]
+
+
+@pytest.mark.parametrize("index", [-1, -3, -100])
+def test_insert_rejects_negative_index(index: int):
+    array = filled([1, 2, 3], capacity=8)
+
+    with pytest.raises(IndexError, match="out of range"):
+        array.insert(index, 9)
+
+    assert list(array) == [1, 2, 3]
+
+
+def test_insert_does_not_resize_while_there_is_room():
+    array = filled([1, 2, 3], capacity=4)
+
+    array.insert(1, 9)
+
+    assert array.capacity == 4
+
+
+@pytest.mark.parametrize("index", [0, 2, 4])
+def test_insert_into_a_full_array_grows_capacity_and_keeps_every_item(index: int):
+    array = filled([1, 2, 3, 4], capacity=4)
+
+    array.insert(index, 9)
+
+    expected = [1, 2, 3, 4]
+    expected.insert(index, 9)
+    assert array.capacity == 8
+    assert list(array) == expected
+
+
+def test_insert_rejects_growth_policy_that_does_not_grow():
+    array = filled([1, 2], capacity=2, growth=lambda capacity: capacity)
+
+    with pytest.raises(ValueError, match=r"must increase capacity \(2 -> 2\)"):
+        array.insert(0, 9)
+
+    assert list(array) == [1, 2]
+    assert array.capacity == 2
+
+
+def test_insert_accepts_none_as_an_item():
+    array = DynamicArray[int | None]()
+    array.append(1)
+
+    array.insert(0, None)
+
+    assert list(array) == [None, 1]
+
+
+# --- pop(index) ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("index", "expected"),
+    [(0, [2, 3, 4]), (1, [1, 3, 4]), (2, [1, 2, 4]), (3, [1, 2, 3])],
+    ids=["front", "second", "third", "end"],
+)
+def test_pop_at_each_position_shifts_later_items_left(index: int, expected: list[int]):
+    array = filled([1, 2, 3, 4])
+
+    assert array.pop(index) == index + 1
+    assert list(array) == expected
+    assert len(array) == 3
+
+
+@pytest.mark.parametrize("index", [3, 4, 100])
+def test_pop_rejects_index_not_less_than_length(index: int):
+    array = filled([1, 2, 3], capacity=8)
+
+    with pytest.raises(IndexError, match="out of range"):
+        array.pop(index)
+
+    assert list(array) == [1, 2, 3]
+
+
+@pytest.mark.parametrize("index", [-1, -3, -100])
+def test_pop_rejects_negative_index(index: int):
+    array = filled([1, 2, 3])
+
+    with pytest.raises(IndexError, match="out of range"):
+        array.pop(index)
+
+    assert list(array) == [1, 2, 3]
+
+
+def test_pop_on_empty_array_raises():
+    with pytest.raises(IndexError, match="out of range"):
+        DynamicArray[int]().pop(0)
+
+
+def test_pop_does_not_change_capacity():
+    array = filled([1, 2, 3, 4], capacity=4)
+
+    array.pop(1)
+
+    assert array.capacity == 4
+
+
+def test_pop_from_the_middle_releases_its_reference_to_the_item():
+    class Token:
+        pass
+
+    array = DynamicArray[Token]()
+    token = Token()
+    reference = weakref.ref(token)
+    array.append(Token())
+    array.append(token)
+    array.append(Token())
+
+    assert array.pop(1) is token
+    del token
+    gc.collect()
+
+    assert reference() is None
+
+
+def test_pop_then_append_does_not_resurrect_the_shifted_copy():
+    # Shifting left leaves a duplicate in the old last slot; it must be cleared.
+    array = filled([1, 2, 3], capacity=4)
+
+    array.pop(0)
+    array.append(4)
+
+    assert list(array) == [2, 3, 4]
+    assert None not in array
+
+
+# --- Inherited: prepend, pop_front, remove ------------------------------------
+
+
+def test_prepend_puts_each_item_before_the_rest():
+    array = DynamicArray[int](capacity=2)
+
+    for item in (1, 2, 3):
+        array.prepend(item)
+
+    assert list(array) == [3, 2, 1]
+    assert array.capacity == 4
+
+
+def test_pop_front_returns_items_in_index_order():
+    array = filled([1, 2, 3])
+
+    assert [array.pop_front() for _ in range(3)] == [1, 2, 3]
+    with pytest.raises(IndexError, match="pop_front from empty list"):
+        array.pop_front()
+
+
+def test_remove_takes_out_the_first_match_only():
+    array = filled([1, 2, 1, 2])
+
+    array.remove(2)
+
+    assert list(array) == [1, 1, 2]
+    with pytest.raises(ValueError, match="item not in list"):
+        array.remove(9)
+
+
+def test_remove_ignores_unused_slots():
+    # Unused slots hold None internally; remove(None) must not find one.
+    array = filled([1, 2], capacity=8)
+
+    with pytest.raises(ValueError, match="item not in list"):
+        array.remove(None)  # pyright: ignore[reportArgumentType]
 
 
 # --- Iteration ----------------------------------------------------------------
@@ -534,7 +737,7 @@ def test_iter_reflects_the_current_contents():
     array = filled([1, 2, 3])
 
     array[0] = 10
-    array.pop()
+    array.pop_back()
     array.append(30)
 
     assert list(array) == [10, 2, 30]
@@ -582,10 +785,10 @@ def test_contains_finds_none_when_it_was_stored():
     assert None in array
 
 
-def test_contains_no_longer_finds_a_popped_item():
+def test_contains_no_longer_finds_a_popped_back_item():
     array = filled([1, 2, 3])
 
-    array.pop()
+    array.pop_back()
 
     assert 3 not in array
     assert 2 in array
@@ -682,7 +885,7 @@ growth_policies = st.sampled_from(
 # Each operation is (name, index, value); an operation ignores what it does not need.
 operations = st.lists(
     st.tuples(
-        st.sampled_from(["append", "append", "pop", "set"]),
+        st.sampled_from(["append", "append", "pop_back", "set", "insert", "pop"]),
         st.integers(min_value=0),
         st.integers(),
     ),
@@ -705,12 +908,23 @@ def test_behaves_like_list_for_any_sequence_of_operations(
         if name == "append":
             array.append(value)
             model.append(value)
-        elif name == "pop":
+        elif name == "pop_back":
             if model:
-                assert array.pop() == model.pop()
+                assert array.pop_back() == model.pop()
             else:
                 with pytest.raises(IndexError):
-                    array.pop()
+                    array.pop_back()
+        elif name == "insert":
+            position = index % (len(model) + 1)
+            array.insert(position, value)
+            model.insert(position, value)
+        elif name == "pop":
+            if model:
+                position = index % len(model)
+                assert array.pop(position) == model.pop(position)
+            else:
+                with pytest.raises(IndexError):
+                    array.pop(index)
         elif model:
             position = index % len(model)
             array[position] = value
@@ -744,5 +958,5 @@ def test_capacity_never_shrinks_and_never_falls_below_length(
         previous = array.capacity
 
     for _ in range(count):
-        array.pop()
+        array.pop_back()
         assert array.capacity == previous

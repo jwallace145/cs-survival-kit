@@ -3,8 +3,8 @@
 Provides `DynamicArray`, a resizable array backed by fixed-capacity storage,
 and a set of growth policies that decide how much capacity to add each time
 the array resizes. The growth policy determines the amortized cost of
-`DynamicArray.append`: geometric policies give amortized O(1) appends, while
-additive policies give amortized O(n) appends.
+`append`: geometric policies give amortized O(1) appends, while additive
+policies give amortized O(n) appends.
 """
 
 import math
@@ -125,10 +125,17 @@ class DynamicArray[T](AbstractList[T]):
     """A resizable array backed by fixed-capacity storage.
 
     Elements are stored in a fixed-size backing list of `capacity` slots,
-    where only the first `len(self)` slots are in use. When an append finds
+    where only the first `len(self)` slots are in use. When an insert finds
     no free slot, the array first resizes: it allocates a larger backing list,
     sized by the growth policy, and copies every element into it. The backing
     storage never shrinks, so popping elements leaves capacity unchanged.
+
+    Elements sit at evenly spaced positions, so reaching any index is one
+    arithmetic step. The price is paid on insertion and removal anywhere but
+    the end: every later element has to shift by one slot to keep the block
+    contiguous. The inherited `append` and `pop_back` work at the end and
+    shift nothing; the inherited `prepend` and `pop_front` work at index 0 and
+    shift everything.
 
     Unlike `list`, indexing accepts only non-negative indices in the range
     `0 <= index < len(self)`. Negative indices and slices are not supported.
@@ -136,19 +143,25 @@ class DynamicArray[T](AbstractList[T]):
     Complexity:
         | Operation          | Time                       | Space                      |
         | ------------------ | -------------------------- | -------------------------- |
-        | `append`           | O(1) amortized, O(n) worst | O(1) amortized, O(n) worst |
-        | `pop`              | O(1)                       | O(1)                       |
         | `a[i]`, `a[i] = x` | O(1)                       | O(1)                       |
+        | `insert`           | O(n) amortized             | O(1) amortized, O(n) worst |
+        | `pop`              | O(n)                       | O(1)                       |
+        | `append`           | O(1) amortized, O(n) worst | O(1) amortized, O(n) worst |
+        | `pop_back`         | O(1)                       | O(1)                       |
+        | `prepend`          | O(n)                       | O(1) amortized, O(n) worst |
+        | `pop_front`        | O(n)                       | O(1)                       |
+        | `remove`           | O(n)                       | O(1)                       |
         | `len(a)`           | O(1)                       | O(1)                       |
         | `item in a`        | O(n)                       | O(1)                       |
         | iteration          | O(n)                       | O(1)                       |
         | resize             | O(n)                       | O(n)                       |
 
-        The `append` bounds assume a geometric growth policy such as the
-        default `doubling`. With an `additive` policy, `append` is amortized
-        O(n). Total storage is O(capacity). For an array built by appends
-        alone, `doubling` keeps capacity below 2n once the array has grown past
-        its initial capacity.
+        `insert` at index `i` shifts `n - i` elements, so it is O(1) at the
+        end and O(n) at the front; `pop` likewise. The amortized bounds
+        assume a geometric growth policy such as the default `doubling`.
+        With an `additive` policy, `append` is amortized O(n). Total storage
+        is O(capacity). For an array built by appends alone, `doubling` keeps
+        capacity below 2n once the array has grown past its initial capacity.
 
     Args:
         capacity: The number of slots to allocate up front. Must be at least 1.
@@ -171,10 +184,11 @@ class DynamicArray[T](AbstractList[T]):
         >>> a
         DynamicArray([1, 2, 3])
         >>> a[0] = 10
-        >>> a.pop()
+        >>> a.pop_back()
         3
+        >>> a.insert(1, 15)
         >>> list(a)
-        [10, 2]
+        [10, 15, 2]
     """
 
     def __init__(self, capacity: int = 4, growth: GrowthPolicy = doubling) -> None:
@@ -191,7 +205,7 @@ class DynamicArray[T](AbstractList[T]):
         """The number of allocated slots, used or not.
 
         Always at least `len(self)`. The two are equal when the array is full,
-        and the next append will trigger a resize.
+        and the next insert will trigger a resize.
 
         Complexity:
             - Time: O(1)
@@ -236,7 +250,8 @@ class DynamicArray[T](AbstractList[T]):
     def __setitem__(self, index: int, item: T) -> None:
         """Replace the element at `index` with `item`.
 
-        Only overwrites an existing element. Use `append` to add one.
+        Only overwrites an existing element. Use `insert` or `append` to add
+        one.
 
         Args:
             index: The position of the element to replace. Must satisfy
@@ -258,6 +273,9 @@ class DynamicArray[T](AbstractList[T]):
     def __iter__(self) -> Iterator[T]:
         """Iterate over the elements from index 0 to `len(self) - 1`.
 
+        Unused slots are never visited, so `None in a` is `True` only if
+        `None` was actually stored.
+
         Yields:
             Each element, in index order.
 
@@ -268,82 +286,49 @@ class DynamicArray[T](AbstractList[T]):
         for i in range(self._size):
             yield typing.cast(T, self._items[i])
 
-    def __contains__(self, item: object) -> bool:
-        """Return whether `item` is in the array.
-
-        Checks the elements in index order and stops at the first match. An
-        element matches if it is `item` or equals it, the same rule that
-        `list` uses. Unused slots are never examined, so `None in a` is
-        `True` only if `None` was actually stored.
-
-        Args:
-            item: The value to look for.
-
-        Returns:
-            `True` if some element is `item` or equals it, otherwise `False`.
-
-        Complexity:
-            - Time: O(n), since the elements are not ordered and each one may
-              have to be checked; O(1) if the first element matches
-            - Space: O(1)
-
-        Examples:
-            >>> a = DynamicArray[int]()
-            >>> a.append(1)
-            >>> 1 in a, 2 in a
-            (True, False)
-        """
-        for i in range(self._size):
-            element = self._items[i]
-            if element is item or element == item:
-                return True
-
-        return False
-
-    def __repr__(self) -> str:
-        """Return a string showing the class name and the elements, like `list`.
-
-        Unused slots and the capacity are not shown. Use `capacity` to inspect
-        the backing storage.
-
-        Returns:
-            A string such as `DynamicArray([1, 2, 3])`.
-        """
-        return f"{type(self).__name__}({list(self)})"
-
-    def append(self, item: T) -> None:
-        """Add `item` to the end of the array.
+    def insert(self, index: int, item: T) -> None:
+        """Add `item` at `index`, shifting every later element one slot right.
 
         If the array is full, it first resizes to the capacity returned by the
-        growth policy, copying every element, and then stores the item in the
-        first free slot. Resizing only when there is no room means every
-        allocated slot gets used before the array grows.
+        growth policy, copying every element, and only then makes room.
+        Resizing only when there is no free slot means every allocated slot
+        gets used before the array grows. The shift then runs from the last
+        element down to `index`, so no element is overwritten before it has
+        been moved.
+
+        Inserting at `len(self)` shifts nothing, which is why the inherited
+        `append` is O(1) amortized. Inserting at 0 shifts every element, which
+        is why the inherited `prepend` is O(n).
 
         The growth policy's result is checked before anything changes. If it
         is not greater than the current capacity, `ValueError` is raised and
         the array is left exactly as it was.
 
         Args:
+            index: The position the new element will occupy. Must satisfy
+                `0 <= index <= len(self)`.
             item: The element to add.
 
         Raises:
+            IndexError: If `index` is negative or greater than `len(self)`.
             ValueError: If the array is full and the growth policy returns a
                 capacity that is not greater than the current capacity.
 
         Complexity:
-            - Time: O(1) amortized with a geometric growth policy; O(n) for
-              the append that triggers a resize
-            - Space: O(1) amortized; O(n) for the append that triggers a resize
+            - Time: O(n - index) to shift, plus O(n) for the insert that
+              triggers a resize; O(1) amortized at the end with a geometric
+              growth policy
+            - Space: O(1) amortized; O(n) for the insert that triggers a resize
 
         Examples:
             >>> a = DynamicArray[str](capacity=2)
             >>> a.append("x")
-            >>> a.append("y")  # fills the last free slot; no resize yet
+            >>> a.append("z")  # fills the last free slot; no resize yet
             >>> a.capacity
             2
-            >>> a.append("z")  # no free slot, so the array grows first
-            >>> a.capacity
-            4
+            >>> a.insert(1, "y")  # no free slot, so the array grows first
+            >>> a, a.capacity
+            (DynamicArray(['x', 'y', 'z']), 4)
 
             A growth policy that doesn't grow is rejected:
 
@@ -356,6 +341,11 @@ class DynamicArray[T](AbstractList[T]):
             >>> list(stuck), stuck.capacity
             ([1], 1)
         """
+        # verify that the given index is within the valid range; one past the
+        # last element is allowed, which adds at the end
+        if index < 0 or index > self._size:
+            raise IndexError("index out of range")
+
         # if the array is full, resize it according to the growth policy before
         # inserting the new item
         if self._size == self._capacity:
@@ -371,45 +361,73 @@ class DynamicArray[T](AbstractList[T]):
 
             self._resize(new_capacity)
 
-        # insert the item into the array by its index in the first open position
-        self._items[self._size] = item
+        # shift the elements from the end down to the index one slot to the
+        # right, walking backwards so that each element is moved before the
+        # element behind it overwrites its old slot
+        for i in range(self._size, index, -1):
+            self._items[i] = self._items[i - 1]
+
+        # store the item in the slot the shift opened up
+        self._items[index] = item
 
         # update the size of the array
         self._size = self._size + 1
 
-    def pop(self) -> T:
-        """Remove and return the last element.
+    def pop(self, index: int) -> T:
+        """Remove and return the element at `index`, shifting later ones left.
 
-        The freed slot is cleared, so the array no longer holds a reference to
-        the element. Capacity is unchanged.
+        The shift runs from `index + 1` up to the last element, so each slot
+        is overwritten only after its element has moved. The slot freed at
+        the end is cleared, so the array no longer holds a reference to the
+        element. Capacity is unchanged.
+
+        Popping at `len(self) - 1` shifts nothing, which is why the inherited
+        `pop_back` is O(1). Popping at 0 shifts every remaining element, which
+        is why the inherited `pop_front` is O(n).
+
+        Args:
+            index: The position of the element to remove. Must satisfy
+                `0 <= index < len(self)`.
 
         Returns:
-            The element that was at index `len(self) - 1`.
+            The element that was at `index`.
 
         Raises:
-            IndexError: If the array is empty.
+            IndexError: If `index` is negative or not less than `len(self)`.
 
         Complexity:
-            - Time: O(1)
+            - Time: O(n - index) to shift; O(1) at the end
             - Space: O(1)
 
         Examples:
             >>> a = DynamicArray[int]()
-            >>> a.append(1)
-            >>> a.pop()
+            >>> for item in (1, 2, 3):
+            ...     a.append(item)
+            >>> a.pop(0)
             1
-            >>> a.pop()
+            >>> a
+            DynamicArray([2, 3])
+            >>> a.pop(2)
             Traceback (most recent call last):
                 ...
-            IndexError: pop from empty array
+            IndexError: index out of range
         """
-        if self._size == 0:
-            raise IndexError("pop from empty array")
+        # verify that the given index is within the valid range
+        if index < 0 or index >= self._size:
+            raise IndexError("index out of range")
 
-        pos: int = self._size - 1
-        item: T = typing.cast(T, self._items[pos])
-        self._items[pos] = None
-        self._size = pos
+        item: T = typing.cast(T, self._items[index])
+
+        # shift the elements after the index one slot to the left, walking
+        # forwards so that each slot is overwritten only after its element has
+        # already been moved
+        for i in range(index, self._size - 1):
+            self._items[i] = self._items[i + 1]
+
+        # clear the slot freed at the end so the array does not keep a stale
+        # reference to the last element, then update the size
+        self._size = self._size - 1
+        self._items[self._size] = None
 
         return item
 

@@ -36,19 +36,22 @@ class SinglyLinkedList[T](AbstractList[T]):
     the next one. The list keeps references to the first node (`head`) and the
     last node (`tail`), plus a running size count:
 
-    - **`head`** makes `prepend` and `pop_front` O(1).
-    - **`tail`** makes `append` O(1). Without it, appending would mean walking
-      the whole chain to find the last node.
+    - **`head`** makes `insert` and `pop` at index 0 O(1), and so the
+      inherited `prepend` and `pop_front`.
+    - **`tail`** makes `insert` at index `len(self)` O(1), and so the
+      inherited `append`. Without it, appending would mean walking the whole
+      chain to find the last node.
     - **The size count** makes `len` O(1) instead of a full traversal.
 
     Links only point forward, so there is no fast way to reach a node's
-    predecessor. Removing the last element would require walking from the head
-    to the second-to-last node, so the list offers no O(1) `pop_back`. That
-    limitation is what a doubly linked list removes.
+    predecessor. Removing the last element means walking from the head to the
+    second-to-last node, so the inherited `pop_back` is O(n) even though the
+    tail reference finds the last node instantly. That limitation is what a
+    doubly linked list removes.
 
-    Compared with `DynamicArray`, adding at the front is O(1) instead of O(n),
-    but indexing is O(n) instead of O(1), and every element pays for an extra
-    node object and link.
+    Compared with `DynamicArray`, adding or removing at the front is O(1)
+    instead of O(n), but indexing is O(n) instead of O(1), and every element
+    pays for an extra node object and link.
 
     Unlike `list`, indexing accepts only non-negative indices in the range
     `0 <= index < len(self)`. Negative indices and slices are not supported.
@@ -56,17 +59,22 @@ class SinglyLinkedList[T](AbstractList[T]):
     Complexity:
         | Operation          | Time | Space |
         | ------------------ | ---- | ----- |
+        | `a[i]`, `a[i] = x` | O(n) | O(1)  |
+        | `insert`           | O(n) | O(1)  |
+        | `pop`              | O(n) | O(1)  |
         | `prepend`          | O(1) | O(1)  |
         | `append`           | O(1) | O(1)  |
         | `pop_front`        | O(1) | O(1)  |
-        | `a[i]`             | O(n) | O(1)  |
-        | `item in a`        | O(n) | O(1)  |
+        | `pop_back`         | O(n) | O(1)  |
         | `remove`           | O(n) | O(1)  |
         | `reverse`          | O(n) | O(1)  |
         | `len(a)`           | O(1) | O(1)  |
+        | `item in a`        | O(n) | O(1)  |
         | iteration          | O(n) | O(1)  |
 
-        Total storage is O(n): one node per element.
+        `insert` and `pop` at index `i` follow O(i) links, so they are O(1)
+        at the front. `insert` is also O(1) at the end, thanks to the tail
+        reference. Total storage is O(n): one node per element.
 
     Args:
         items: Elements to add to the new list, in order. Defaults to empty.
@@ -154,215 +162,170 @@ class SinglyLinkedList[T](AbstractList[T]):
         if index < 0 or index >= self._size:
             raise IndexError("index out of range")
 
-        # walk forward from the head one link at a time until reaching the
-        # target position; the bounds check above guarantees the node exists
-        current_node = self._head
-        for _ in range(index):
-            assert current_node is not None
-            current_node = current_node.next
+        return self._node_at(index).item
 
-        assert current_node is not None
-        return current_node.item
+    def __setitem__(self, index: int, item: T) -> None:
+        """Replace the element at `index` with `item`.
 
-    def __contains__(self, item: object) -> bool:
-        """Return whether `item` is in the list.
-
-        Checks the elements from the head onward and stops at the first match.
-        An element matches if it is `item` or equals it, the same rule that
-        `list` uses.
+        Walks `index` links from the head, exactly as `a[i]` does, and
+        overwrites the element in the node it reaches. No node is added or
+        unlinked. Use `insert` to add an element.
 
         Args:
-            item: The value to look for.
-
-        Returns:
-            `True` if some element is `item` or equals it, otherwise `False`.
-
-        Complexity:
-            - Time: O(n)
-            - Space: O(1)
-        """
-        for element in self:
-            if element is item or element == item:
-                return True
-        return False
-
-    def __repr__(self) -> str:
-        """Return a string showing the class name and the elements, like `list`.
-
-        Returns:
-            A string such as `SinglyLinkedList([1, 2, 3])`.
-        """
-        return f"{type(self).__name__}({list(self)})"
-
-    def prepend(self, item: T) -> None:
-        """Add `item` to the front of the list.
-
-        The new node links to the current head and becomes the new head. No
-        existing element moves. An array must shift every element one slot to
-        the right to make room at index 0, which costs O(n).
-
-        Args:
-            item: The element to add.
-
-        Complexity:
-            - Time: O(1)
-            - Space: O(1) for the new node
-
-        Examples:
-            >>> a = SinglyLinkedList[str](["b"])
-            >>> a.prepend("a")
-            >>> a
-            SinglyLinkedList(['a', 'b'])
-        """
-        node = _Node(item)
-
-        # an empty list's new node is both the head and the tail
-        if self._head is None or self._tail is None:
-            self._head = node
-            self._tail = node
-        else:
-            node.next = self._head
-            self._head = node
-
-        self._size += 1
-
-    def append(self, item: T) -> None:
-        """Add `item` to the end of the list.
-
-        The tail reference points straight at the last node, so the new node
-        is linked after it and becomes the new tail. Without a tail reference,
-        finding the last node would mean walking the whole chain, making
-        `append` O(n).
-
-        Args:
-            item: The element to add.
-
-        Complexity:
-            - Time: O(1)
-            - Space: O(1) for the new node
-
-        Examples:
-            >>> a = SinglyLinkedList[str](["a"])
-            >>> a.append("b")
-            >>> a
-            SinglyLinkedList(['a', 'b'])
-        """
-        node = _Node(item)
-
-        # if the head or tail pointer is not set, then the list is empty.
-        # So, set the head and tail pointers to the new node that is to be
-        # appended.
-        #
-        # a useful invariant here is the head pointer will only be not set when
-        # the tail pointer is not set which implies the list is empty.
-        if self._head is None or self._tail is None:
-            self._head = node
-            self._tail = node
-        else:
-            self._tail.next = node
-            self._tail = node
-
-        self._size += 1
-
-    def pop_front(self) -> T:
-        """Remove and return the first element.
-
-        The head moves to the second node. If that empties the list, the tail
-        is cleared too.
-
-        Returns:
-            The element that was at the front of the list.
+            index: The position of the element to replace. Must satisfy
+                `0 <= index < len(self)`.
+            item: The new element.
 
         Raises:
-            IndexError: If the list is empty.
+            IndexError: If `index` is negative or not less than `len(self)`.
 
         Complexity:
-            - Time: O(1)
+            - Time: O(n); O(index) links are followed
+            - Space: O(1)
+        """
+        # verify that the given index is within the valid range
+        if index < 0 or index >= self._size:
+            raise IndexError("index out of range")
+
+        self._node_at(index).item = item
+
+    def insert(self, index: int, item: T) -> None:
+        """Add `item` at `index`, after walking to the node before it.
+
+        A new node is linked in; no existing element moves. An array must
+        shift every element after `index` one slot to the right to make room,
+        which costs O(n) however far the walk is.
+
+        The walk is what costs. Three cases avoid it entirely:
+
+        - `index == 0`: the new node links to the current head and becomes the
+          new head. This is the inherited `prepend`.
+        - `index == len(self)`: the tail reference points straight at the last
+          node, so the new node is linked after it and becomes the new tail.
+          This is the inherited `append`.
+        - Both at once, when the list is empty: the new node is both head and
+          tail.
+
+        Anywhere else, the walk follows `index - 1` links to the predecessor,
+        and the new node is linked between it and its successor.
+
+        Args:
+            index: The position the new element will occupy. Must satisfy
+                `0 <= index <= len(self)`.
+            item: The element to add.
+
+        Raises:
+            IndexError: If `index` is negative or greater than `len(self)`.
+
+        Complexity:
+            - Time: O(n); O(index) links are followed, so O(1) at either end
+            - Space: O(1) for the new node
+
+        Examples:
+            >>> a = SinglyLinkedList[str](["a", "c"])
+            >>> a.insert(1, "b")
+            >>> a
+            SinglyLinkedList(['a', 'b', 'c'])
+            >>> a.prepend("_")  # insert at 0: no walk
+            >>> a.append("d")  # insert at len(a): no walk, thanks to the tail
+            >>> a
+            SinglyLinkedList(['_', 'a', 'b', 'c', 'd'])
+        """
+        # verify that the given index is within the valid range; one past the
+        # last element is allowed, which adds at the end
+        if index < 0 or index > self._size:
+            raise IndexError("index out of range")
+
+        node = _Node(item)
+
+        if self._head is None or self._tail is None:
+            # the list is empty, so the new node is both ends
+            self._head = node
+            self._tail = node
+        elif index == 0:
+            # link the new node in front of the current head
+            node.next = self._head
+            self._head = node
+        elif index == self._size:
+            # link the new node after the current tail
+            self._tail.next = node
+            self._tail = node
+        else:
+            # walk to the predecessor and splice the new node in after it;
+            # the bounds check above guarantees both neighbours exist
+            previous_node = self._node_at(index - 1)
+            node.next = previous_node.next
+            previous_node.next = node
+
+        self._size += 1
+
+    def pop(self, index: int) -> T:
+        """Remove and return the element at `index`, unlinking its node.
+
+        Unlinking a node means pointing its predecessor's `next` past it. At
+        `index == 0` there is no predecessor: the head simply moves to the
+        second node, which is why the inherited `pop_front` is O(1). Anywhere
+        else, the walk follows `index - 1` links to reach the predecessor,
+        because nodes carry no backward link.
+
+        That walk is why the inherited `pop_back` is O(n). The tail reference
+        finds the last node instantly, but unlinking it needs the node before
+        it, and only a walk from the head can find that. If the removed node
+        was the tail, the predecessor becomes the new tail. If it was the only
+        node, both references are cleared.
+
+        Args:
+            index: The position of the element to remove. Must satisfy
+                `0 <= index < len(self)`.
+
+        Returns:
+            The element that was at `index`.
+
+        Raises:
+            IndexError: If `index` is negative or not less than `len(self)`.
+
+        Complexity:
+            - Time: O(n); O(index) links are followed, so O(1) at the front
             - Space: O(1)
 
         Examples:
-            >>> a = SinglyLinkedList[int]([1])
-            >>> a.pop_front()
+            >>> a = SinglyLinkedList[int]([1, 2, 3])
+            >>> a.pop(1)
+            2
+            >>> a.pop_front()  # pop at 0: no walk
             1
-            >>> a.pop_front()
+            >>> a.pop_back()  # pop at len(a) - 1: walks the whole chain
+            3
+            >>> a.pop(0)
             Traceback (most recent call last):
                 ...
-            IndexError: pop_front from empty list
+            IndexError: index out of range
         """
-        if self._head is None:
-            raise IndexError("pop_front from empty list")
+        # verify that the given index is within the valid range
+        if index < 0 or index >= self._size or self._head is None:
+            raise IndexError("index out of range")
 
-        front_node: _Node[T] = self._head
-        self._head = front_node.next
+        if index == 0:
+            # there is no predecessor: the head simply moves along one node
+            removed_node = self._head
+            self._head = removed_node.next
+            previous_node = None
+        else:
+            # walk to the predecessor and point its link past the removed node;
+            # the bounds check above guarantees both nodes exist
+            previous_node = self._node_at(index - 1)
+            removed_node = previous_node.next
+            assert removed_node is not None
+            previous_node.next = removed_node.next
 
-        # maintain the invariant that the head pointer is only not set
-        # when the tail pointer is not set as well
-        #
-        # this if statement is required for when the last remaining element
-        # is popped and the head and tail pointers have to be cleared
-        if self._head is None:
-            self._tail = None
+        # if the removed node was the tail, the predecessor (or nothing, if the
+        # list is now empty) becomes the new tail
+        if removed_node is self._tail:
+            self._tail = previous_node
 
         self._size -= 1
 
-        return front_node.item
-
-    def remove(self, item: T) -> None:
-        """Remove the first element that matches `item`.
-
-        Only the first match, scanning from the head, is removed. An element
-        matches if it is `item` or equals it, as in `item in a`. Unlinking a
-        node means pointing its predecessor's `next` past it, and nodes have no
-        backward link, so the scan carries a reference to the previous node as
-        it goes. The head and tail references are updated when the removed node
-        is at either end.
-
-        Args:
-            item: The value to remove.
-
-        Raises:
-            ValueError: If no element matches `item`.
-
-        Complexity:
-            - Time: O(n)
-            - Space: O(1)
-
-        Examples:
-            >>> a = SinglyLinkedList[int]([1, 2, 1])
-            >>> a.remove(1)
-            >>> a
-            SinglyLinkedList([2, 1])
-            >>> a.remove(5)
-            Traceback (most recent call last):
-                ...
-            ValueError: item not in list
-        """
-        previous_node: _Node[T] | None = None
-        current_node: _Node[T] | None = self._head
-
-        while current_node is not None:
-            if current_node.item is item or current_node.item == item:
-                # if the target node has a predecessor, link it past the
-                # target; otherwise the target is the head, so advance the head
-                if previous_node is not None:
-                    previous_node.next = current_node.next
-                else:
-                    self._head = current_node.next
-
-                # if the target was the last node, its predecessor is the new
-                # tail (None when the list is now empty)
-                if current_node is self._tail:
-                    self._tail = previous_node
-
-                self._size -= 1
-                return
-
-            # continue searching through the linked list while remembering
-            # the predecessor nodes in case the target node is found
-            previous_node = current_node
-            current_node = current_node.next
-
-        raise ValueError("item not in list")
+        return removed_node.item
 
     def reverse(self) -> None:
         """Reverse the list in place.
@@ -386,20 +349,41 @@ class SinglyLinkedList[T](AbstractList[T]):
             >>> a
             SinglyLinkedList([3, 2, 1, 0])
         """
-        # the current head will be the tail once every link is reversed
         self._tail = self._head
 
         previous_node: _Node[T] | None = None
         current_node: _Node[T] | None = self._head
 
         while current_node is not None:
-            # save the rest of the list before overwriting the forward link
             next_node = current_node.next
 
-            # point the current node backward, then advance both references
             current_node.next = previous_node
+
             previous_node = current_node
             current_node = next_node
 
-        # the last node visited, the old tail, is the new head
         self._head = previous_node
+
+    def _node_at(self, index: int) -> _Node[T]:
+        """Return the node at `index` by walking `index` links from the head.
+
+        Args:
+            index: The position of the node. Must satisfy
+                `0 <= index < len(self)`; the caller checks the bounds.
+
+        Returns:
+            The node at `index`.
+
+        Complexity:
+            - Time: O(index)
+            - Space: O(1)
+        """
+        # walk forward from the head one link at a time until reaching the
+        # target position; the caller's bounds check guarantees the node exists
+        current_node = self._head
+        for _ in range(index):
+            assert current_node is not None
+            current_node = current_node.next
+
+        assert current_node is not None
+        return current_node

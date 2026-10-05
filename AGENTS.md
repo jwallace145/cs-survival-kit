@@ -56,9 +56,12 @@ When asked to stub a new data structure or algorithm, follow the pattern in
 
 - Typed signatures using PEP 695 generics (`class Foo[T]:`). Every body is `raise NotImplementedError`.
 - A list-like structure (ordered, indexable, appendable) subclasses
-  `cs_survival_kit.data_structures.AbstractList` and stubs all six of its operations, with matching
-  parameter names (`index`, `item`). Operations particular to the structure are added alongside. A stub
-  that subclasses it cannot be instantiated until every abstract operation has a body, which is fine.
+  `cs_survival_kit.data_structures.AbstractList` and stubs its six primitives (`__len__`, `__iter__`,
+  `__getitem__`, `__setitem__`, `insert`, `pop`), with matching parameter names (`index`, `item`). The
+  defaults (`append`, `prepend`, `pop_front`, `pop_back`, `remove`, `__contains__`, `__repr__`) are
+  inherited and are not stubbed, but the class's `Complexity:` table still gets a row for each of them.
+  Operations particular to the structure are added alongside. A stub that subclasses it cannot be
+  instantiated until every primitive has a body, which is fine.
 - Module docstring: `TODO: One-line summary...` plus an optional extended-description `TODO`.
 - Class docstring: summary `TODO`, extended-description `TODO`, a `Complexity:` section containing a
   markdown table with one row per public operation and `TODO` in every Time/Space cell, then `Args`,
