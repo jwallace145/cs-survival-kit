@@ -27,13 +27,14 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> FakeClock:
     return fake
 
 
-def results_for(*cases: CaseResult) -> Results:
+def results_for(*cases: CaseResult, per_item: bool = False) -> Results:
     return Results(
         name="synthetic",
         run_at="2026-01-01T00:00:00+00:00",
         package_version="0.0.0",
         environment={},
         cases=list(cases),
+        per_item=per_item,
     )
 
 
@@ -305,7 +306,15 @@ def test_to_dict_matches_the_results_schema():
     results = results_for(synthetic_case("case", 1.0))
     data = results.to_dict()
 
-    assert set(data) == {"name", "run_at", "package_version", "environment", "cases"}
+    assert set(data) == {
+        "name",
+        "run_at",
+        "package_version",
+        "environment",
+        "cases",
+        "per_item",
+    }
+    assert data["per_item"] is False
     assert set(data["cases"][0]) == {"label", "sizes", "seconds", "slope", "status"}
     assert data["cases"][0]["status"] == "ok"
 
@@ -321,3 +330,47 @@ def test_table_prints_every_case(capsys: pytest.CaptureFixture[str]):
     assert "not implemented" in out
     assert "2.5 µs" in out
     assert "1,000,000" in out
+
+
+# --- per-item view ----------------------------------------------------------
+
+
+def test_per_item_flag_is_carried_from_benchmark_to_results(clock: FakeClock):
+    plain = Benchmark("plain", sizes=[1])
+    plain.case("case", setup=lambda n: n, run=lambda n: clock.advance(10**9))
+    per_item = Benchmark("per item", sizes=[1], per_item=True)
+    per_item.case("case", setup=lambda n: n, run=lambda n: clock.advance(10**9))
+
+    assert plain.run(repeat=1).per_item is False
+    assert per_item.run(repeat=1).per_item is True
+    assert per_item.run(repeat=1).to_dict()["per_item"] is True
+
+
+def test_table_has_no_per_item_section_by_default():
+    assert "per item" not in results_for(synthetic_case("linear", 1.0)).format()
+
+
+def test_per_item_table_divides_each_time_by_its_size():
+    # 2 µs for 100 items is 20 ns each; 2 ms for 1,000 items is 2 µs each.
+    flat = CaseResult("flat", core.OK, [100, 1_000], [2e-6, 2e-5], 1.0)
+    growing = CaseResult("growing", core.OK, [100, 1_000], [2e-6, 2e-3], 3.0)
+    text = results_for(flat, growing, per_item=True).format()
+
+    totals, per_item = text.split("per item (time / n)")
+    assert "2 µs" in totals and "2 ms" in totals
+    rows = {line.split()[0]: line for line in per_item.strip().splitlines()[1:]}
+    assert rows["100"].split()[1:] == ["20", "ns", "20", "ns"]
+    assert rows["1,000"].split()[1:] == ["20", "ns", "2", "µs"]
+
+
+def test_per_item_table_marks_sizes_a_case_did_not_run():
+    wide = CaseResult("wide", core.OK, [10, 100], [1e-6, 1e-5], 1.0)
+    narrow = CaseResult("narrow", core.OK, [10], [1e-6], None)
+    stub = CaseResult("stub", core.NOT_IMPLEMENTED, [], [], None)
+    per_item = (
+        results_for(wide, narrow, stub, per_item=True).format().split("per item")[1]
+    )
+
+    row = next(line for line in per_item.splitlines() if line.split()[:1] == ["100"])
+    assert row.split()[1:] == ["100", "ns", "-", "-"]
+    assert "slope" not in per_item
