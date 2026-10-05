@@ -50,8 +50,9 @@ jobs:
           files: coverage.xml
           disable_search: true
           fail_ci_if_error: true  # surfaces as a warning on the step
-      # Checks that the benchmarks execute. Never writes results: published
-      # numbers come from a development machine, not from shared runners.
+      # Only checks that the benchmarks execute. The full suite is too slow for
+      # every PR: it runs at release time (release.yml) and on demand
+      # (benchmarks.yml).
       - run: uv run python -m cs_survival_kit.bench --smoke
       - run: uv build
       - name: Verify the built wheel

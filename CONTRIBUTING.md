@@ -127,5 +127,12 @@ undocumented.
 
 ## Benchmarks
 
-Benchmark numbers are produced on the owner's machine and committed. CI never
-writes benchmark results; shared runners are too noisy to trust.
+Published benchmark numbers are measured on a GitHub-hosted runner when a
+release is built, and shipped inside the package. They are not committed: the
+`benchmarks.json` in the repository stays empty, so do not commit numbers to
+it.
+
+To see how a branch performs, run the **Benchmarks** workflow on it from the
+Actions tab. Every PR also runs the benchmarks in `--smoke` mode to check that
+they execute. The full suite must stay under 10 minutes on a runner; see
+`AGENTS.md` for the budget rules.

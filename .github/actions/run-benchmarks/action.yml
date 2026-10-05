@@ -1,0 +1,31 @@
+# Runs the full benchmark suite and writes fresh results into the package's
+# data file, so a build that follows ships numbers measured on this runner
+# against exactly the code that was checked out.
+#
+# Requires: the repository checked out, and uv set up.
+name: Run benchmarks
+description: Run the full benchmark suite and write results into the package data file.
+
+runs:
+  using: composite
+  steps:
+    - run: uv sync --locked
+      shell: bash
+    - name: Run the benchmark suite
+      shell: bash
+      run: |
+        # Start from an empty file so results for removed benchmarks are dropped.
+        rm -f src/cs_survival_kit/_data/benchmarks.json
+        uv run python -m cs_survival_kit.bench | tee "$RUNNER_TEMP/benchmarks.txt"
+    - name: Summarize
+      shell: bash
+      run: |
+        {
+          echo "## Benchmark results"
+          echo
+          echo "Runner: \`$(uname -srm)\`, $(nproc) CPUs, $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | xargs)"
+          echo
+          echo '```text'
+          cat "$RUNNER_TEMP/benchmarks.txt"
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
