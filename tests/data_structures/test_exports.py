@@ -35,3 +35,10 @@ def test_growth_policies_are_usable_from_the_package_import():
         array.append(item)
 
     assert array.capacity == 3
+
+
+def test_doubly_linked_list_is_exported_from_the_package():
+    from cs_survival_kit.data_structures import DoublyLinkedList, doubly_linked_list
+
+    assert "DoublyLinkedList" in data_structures.__all__
+    assert DoublyLinkedList is doubly_linked_list.DoublyLinkedList

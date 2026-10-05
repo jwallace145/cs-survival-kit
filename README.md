@@ -30,7 +30,7 @@ from cs_survival_kit.data_structures import DynamicArray, geometric
 numbers = DynamicArray[int]()            # doubles its capacity when full
 numbers.append(1)
 numbers.append(2)
-numbers.pop()                            # 2
+numbers.pop_back()                       # 2
 len(numbers), numbers.capacity           # (1, 4)
 
 # How the array grows is pluggable: doubling (the default), geometric(factor)
