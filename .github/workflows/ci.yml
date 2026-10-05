@@ -37,8 +37,11 @@ jobs:
       - run: uv run python scripts/check_docs.py
       # Fails if total coverage drops below fail_under in pyproject.toml.
       - run: uv run pytest --cov --cov-report=term --cov-report=xml
+      # Reporting only. The coverage bar is enforced by the pytest step above,
+      # so a Codecov outage must not fail the build.
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.13'
+        continue-on-error: true
         uses: codecov/codecov-action@v7
         with:
           # Install the uploader from PyPI rather than cli.codecov.io.
@@ -46,7 +49,7 @@ jobs:
           use_oidc: true
           files: coverage.xml
           disable_search: true
-          fail_ci_if_error: true
+          fail_ci_if_error: true  # surfaces as a warning on the step
       # Checks that the benchmarks execute. Never writes results: published
       # numbers come from a development machine, not from shared runners.
       - run: uv run python -m cs_survival_kit.bench --smoke
