@@ -65,6 +65,8 @@ class Results:
         package_version: The `cs-survival-kit` version that was measured.
         environment: The interpreter and machine the run happened on.
         cases: One result per case, in the order the cases were added.
+        per_item: Whether a run of size `n` performs `n` operations, so that
+            time divided by `n` is a meaningful per-operation cost.
     """
 
     name: str
@@ -72,6 +74,7 @@ class Results:
     package_version: str
     environment: dict[str, str]
     cases: list[CaseResult]
+    per_item: bool = False
 
     def fit(self) -> dict[str, Fit]:
         """Estimate each case's growth from its measurements.
@@ -103,13 +106,18 @@ class Results:
 
         Returns:
             One row per size and one column per case, followed by each
-            case's slope and growth.
+            case's slope and growth. For a `per_item` benchmark, a second
+            table follows with every time divided by its size: the amortized
+            cost of one operation. A flat column there means constant cost
+            per operation; a growing one means each operation gets more
+            expensive as the input grows.
         """
         fits = self.fit()
         sizes = sorted({n for case in self.cases for n in case.sizes})
         columns: list[list[str]] = [
             ["n", *(f"{n:,}" for n in sizes), "slope", "growth"]
         ]
+        per_item_columns: list[list[str]] = [["n", *(f"{n:,}" for n in sizes)]]
         for case in self.cases:
             times = dict(zip(case.sizes, case.seconds, strict=True))
             fit = fits[case.label]
@@ -121,13 +129,18 @@ class Results:
                     fit.growth,
                 ]
             )
-        widths = [max(len(cell) for cell in column) for column in columns]
-        lines = [self.name]
-        for row in zip(*columns, strict=True):
-            first, *rest = (
-                cell.ljust(width) for cell, width in zip(row, widths, strict=True)
+            per_item_columns.append(
+                [
+                    case.label,
+                    *(
+                        _format_seconds(times[n] / n) if n in times else "-"
+                        for n in sizes
+                    ),
+                ]
             )
-            lines.append("  ".join([first.strip().rjust(widths[0]), *rest]).rstrip())
+        lines = [self.name, *_format_columns(columns)]
+        if self.per_item:
+            lines += ["", "per item (time / n)", *_format_columns(per_item_columns)]
         return "\n".join(lines)
 
     def table(self) -> None:
@@ -164,6 +177,11 @@ class Benchmark:
             `"dynamic_array.append"`. Stored results are keyed by it.
         sizes: The input sizes to measure. Cases use these unless they bring
             their own.
+        per_item: Set this when a run of size `n` performs `n` operations,
+            such as `n` appends. The results table then also shows time
+            divided by `n`, the amortized cost of one operation. Leave it off
+            when `n` is only the size of the input to a single operation,
+            such as sorting `n` items.
 
     Raises:
         ValueError: If `sizes` is empty or contains a non-positive size.
@@ -176,9 +194,12 @@ class Benchmark:
         [[1000]]
     """
 
-    def __init__(self, name: str, sizes: Sequence[int]) -> None:
+    def __init__(
+        self, name: str, sizes: Sequence[int], *, per_item: bool = False
+    ) -> None:
         self.name = name
         self.sizes = _validate_sizes(sizes)
+        self.per_item = per_item
         self._cases: list[_Case] = []
 
     def case[T](
@@ -236,7 +257,9 @@ class Benchmark:
             raise ValueError("repeat must be at least 1")
         run_at = datetime.now(UTC).isoformat(timespec="seconds")
         cases = [_run_case(case, repeat, smoke) for case in self._cases]
-        return Results(self.name, run_at, __version__, _environment(), cases)
+        return Results(
+            self.name, run_at, __version__, _environment(), cases, self.per_item
+        )
 
 
 def fit_slope(sizes: Sequence[int], seconds: Sequence[float]) -> float | None:
@@ -350,6 +373,18 @@ def _environment() -> dict[str, str]:
         "machine": platform.machine(),
         "processor": platform.processor(),
     }
+
+
+def _format_columns(columns: list[list[str]]) -> list[str]:
+    """Lay out columns as aligned rows, right-aligning the first column."""
+    widths = [max(len(cell) for cell in column) for column in columns]
+    rows: list[str] = []
+    for row in zip(*columns, strict=True):
+        first, *rest = (
+            cell.ljust(width) for cell, width in zip(row, widths, strict=True)
+        )
+        rows.append("  ".join([first.strip().rjust(widths[0]), *rest]).rstrip())
+    return rows
 
 
 def _format_seconds(seconds: float) -> str:

@@ -105,6 +105,20 @@ which approximates the exponent `k` in `O(n^k)`: about 0 is constant, about 1
 is linear, about 2 is quadratic. `O(n log n)` reads as slightly above 1. It is
 an empirical sanity check, not a proof.
 
+When a run of size `n` performs `n` operations (such as `n` appends), create
+the benchmark with `per_item=True`. The output then includes a second table
+with every time divided by `n`, the amortized cost of one operation:
+
+```text
+per item (time / n)
+      n  additive(16)  doubling
+  1,000  409 ns        52.1 ns
+ 10,000  3.94 µs       61.3 ns
+```
+
+A flat column means constant cost per operation. A growing one means each
+operation gets more expensive as the input grows.
+
 A benchmark can also be driven from Python: `results = sorting.run(repeat=5)`,
 then `results.table()`, `results.fit()` or `results.to_dict()`.
 
