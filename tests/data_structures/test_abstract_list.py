@@ -2,7 +2,11 @@ from collections.abc import Iterator
 
 import pytest
 
-from cs_survival_kit.data_structures import AbstractList, DynamicArray
+from cs_survival_kit.data_structures import (
+    AbstractList,
+    DynamicArray,
+    SinglyLinkedList,
+)
 
 REQUIRED = {"__len__", "__iter__", "__getitem__", "__contains__", "__repr__", "append"}
 
@@ -68,6 +72,19 @@ def test_dynamic_array_is_an_abstract_list():
     assert isinstance(DynamicArray[int](), AbstractList)
 
 
+def test_singly_linked_list_is_an_abstract_list():
+    assert issubclass(SinglyLinkedList, AbstractList)
+    assert isinstance(SinglyLinkedList[int](), AbstractList)
+
+
+def test_singly_linked_list_defines_every_required_operation():
+    # A class that inherited an abstract operation without overriding it would
+    # still list it here, and could not be instantiated.
+    assert SinglyLinkedList.__abstractmethods__ == frozenset()
+    for name in REQUIRED:
+        assert name in vars(SinglyLinkedList)
+
+
 def fill(target: AbstractList[int], count: int) -> AbstractList[int]:
     """Code written against the interface, as a benchmark would be."""
     for item in range(count):
@@ -75,7 +92,10 @@ def fill(target: AbstractList[int], count: int) -> AbstractList[int]:
     return target
 
 
-@pytest.mark.parametrize("make", [DynamicArray[int], ListBacked[int]])
+IMPLEMENTATIONS = [DynamicArray[int], SinglyLinkedList[int], ListBacked[int]]
+
+
+@pytest.mark.parametrize("make", IMPLEMENTATIONS)
 def test_code_written_against_the_interface_works_with_any_implementation(make):
     items = fill(make(), 50)
 
@@ -84,3 +104,31 @@ def test_code_written_against_the_interface_works_with_any_implementation(make):
     assert items[49] == 49
     assert 49 in items
     assert 50 not in items
+
+
+@pytest.mark.parametrize("make", IMPLEMENTATIONS)
+def test_an_empty_list_of_any_implementation_behaves_the_same(make):
+    items = make()
+
+    assert len(items) == 0
+    assert list(items) == []
+    assert 1 not in items
+    with pytest.raises(IndexError):
+        items[0]
+
+
+@pytest.mark.parametrize("make", IMPLEMENTATIONS)
+def test_repr_of_any_implementation_shows_its_name_and_items(make):
+    items = fill(make(), 3)
+
+    assert repr(items) == f"{type(items).__name__}([0, 1, 2])"
+
+
+@pytest.mark.parametrize("make", [DynamicArray[float], SinglyLinkedList[float]])
+def test_membership_matches_an_element_that_is_the_same_object(make):
+    # NaN is not equal to itself, so only the identity half of the rule finds it.
+    nan = float("nan")
+    items = make()
+    items.append(nan)
+
+    assert nan in items
