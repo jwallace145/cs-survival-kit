@@ -9,12 +9,7 @@ appends, so n appends are quadratic (slope about 2).
 from typing import Protocol
 
 from cs_survival_kit.bench import Benchmark
-from cs_survival_kit.data_structures.dynamic_array import (
-    DynamicArray,
-    additive,
-    doubling,
-    geometric,
-)
+from cs_survival_kit.data_structures import DynamicArray, additive, doubling, geometric
 
 
 class Appendable(Protocol):

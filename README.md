@@ -25,7 +25,17 @@ pip install cs-survival-kit
 Requires Python 3.12 or newer. The core package has no runtime dependencies.
 
 ```python
-from cs_survival_kit.data_structures import DynamicArray
+from cs_survival_kit.data_structures import DynamicArray, geometric
+
+numbers = DynamicArray[int]()            # doubles its capacity when full
+numbers.append(1)
+numbers.append(2)
+numbers.pop()                            # 2
+len(numbers), numbers.capacity           # (1, 4)
+
+# How the array grows is pluggable: doubling (the default), geometric(factor)
+# or additive(step), or any function from the current capacity to a larger one.
+compact = DynamicArray[int](growth=geometric(1.5))
 ```
 
 Structures land one at a time. A module whose functions still raise
