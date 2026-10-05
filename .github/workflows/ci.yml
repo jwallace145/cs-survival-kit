@@ -22,6 +22,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.13"]
+    permissions:
+      contents: read
+      id-token: write  # lets the Codecov upload authenticate without a stored token
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0  # no moving major tag is published
@@ -32,7 +35,16 @@ jobs:
       - run: uv run ruff format --check
       - run: uv run pyright
       - run: uv run python scripts/check_docs.py
-      - run: uv run pytest
+      # Fails if total coverage drops below fail_under in pyproject.toml.
+      - run: uv run pytest --cov --cov-report=term --cov-report=xml
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: coverage.xml
+          disable_search: true
+          fail_ci_if_error: true
       # Checks that the benchmarks execute. Never writes results: published
       # numbers come from a development machine, not from shared runners.
       - run: uv run python -m cs_survival_kit.bench --smoke

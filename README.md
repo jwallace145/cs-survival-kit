@@ -1,5 +1,9 @@
 # cs-survival-kit
 
+[![CI](https://github.com/jwallace145/cs-survival-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/jwallace145/cs-survival-kit/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jwallace145/cs-survival-kit/graph/badge.svg)](https://codecov.io/gh/jwallace145/cs-survival-kit)
+[![PyPI](https://img.shields.io/pypi/v/cs-survival-kit)](https://pypi.org/project/cs-survival-kit/)
+
 Hand-written data structures and algorithms in Python, plus a small toolkit
 for benchmarking them.
 
@@ -114,11 +118,13 @@ uv run ruff format --check       # formatting
 uv run pyright                   # type check
 uv run python scripts/check_docs.py   # docs-completeness check
 uv run pytest                    # tests and doctests
+uv run pytest --cov              # the same, with a coverage report
 uv run python -m cs_survival_kit.bench --smoke   # benchmarks execute
 uv build                         # sdist and wheel into dist/
 ```
 
-All of these run in CI and must pass before a PR can merge.
+All of these run in CI and must pass before a PR can merge. CI also requires
+test coverage of at least 95%, and Codecov reports the coverage of each PR.
 
 ### Formatting and line length
 

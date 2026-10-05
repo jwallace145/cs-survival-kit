@@ -3,13 +3,14 @@
 ## Study modules are hand-written
 
 Everything under `src/cs_survival_kit/data_structures/` and
-`src/cs_survival_kit/algorithms/` is a **study module**: its implementation,
-its docstrings, and its tests are written by hand by the project owner. That
-is the point of the project.
+`src/cs_survival_kit/algorithms/` is a **study module**: its implementation
+and its docstrings are written by hand by the project owner. That is the point
+of the project.
 
-Tooling, CI, packaging, and the benchmark toolkit are fair game for anyone
-(including coding agents; see [AGENTS.md](AGENTS.md) for their standing rules).
-Pull requests that implement a study module will not be merged.
+Unit tests, tooling, CI, packaging, and the benchmark toolkit are fair game
+for anyone (including coding agents; see [AGENTS.md](AGENTS.md) for their
+standing rules). Pull requests that implement a study module will not be
+merged.
 
 ## Commit messages
 
@@ -93,8 +94,15 @@ class, not on `__init__`.
 
 ## Quality gates
 
-CI runs `ruff check`, `ruff format --check`, `pyright`, `pytest` (including
-doctests over `src/`), `scripts/check_docs.py`, and `uv build`. All must pass.
+CI runs `ruff check`, `ruff format --check`, `pyright`, `pytest --cov`
+(including doctests over `src/`), `scripts/check_docs.py`, and `uv build`. All
+must pass.
+
+Test coverage (lines and branches) must stay at or above 95%. CI fails below
+that, and [Codecov](https://app.codecov.io/gh/jwallace145/cs-survival-kit)
+reports on every PR, checking both the project total and the lines the PR
+changes. Stub bodies (`raise NotImplementedError`) are excluded from the
+measurement.
 
 Python lines are limited to 88 characters, checked by `ruff check`. Run
 `uv run pre-commit install` once to have ruff lint and format your files on

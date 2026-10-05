@@ -1,0 +1,16 @@
+# Codecov posts two checks on every PR and a summary comment.
+coverage:
+  status:
+    # Total coverage of the package after the PR.
+    project:
+      default:
+        target: 95%
+        threshold: 1%
+    # Coverage of only the lines the PR adds or changes.
+    patch:
+      default:
+        target: 95%
+
+comment:
+  layout: "condensed_header, condensed_files, condensed_footer"
+  require_changes: false
