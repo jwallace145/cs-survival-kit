@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.4.0...v0.5.0) (2026-10-05)
+
+
+### Features
+
+* **ds:** add AbstractList and DynamicArray membership testing ([#18](https://github.com/jwallace145/cs-survival-kit/issues/18)) ([abe1c74](https://github.com/jwallace145/cs-survival-kit/commit/abe1c745f1277a2285b8db0d092cbc6bc667be56))
+
+
+### Documentation
+
+* keep the PyPI version badge current ([#16](https://github.com/jwallace145/cs-survival-kit/issues/16)) ([1cebf36](https://github.com/jwallace145/cs-survival-kit/commit/1cebf3609915b622d2df9b652e94d5c43fe383e6))
+
 ## [0.4.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.3.0...v0.4.0) (2026-10-05)
 
 
