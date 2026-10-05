@@ -112,11 +112,25 @@ then `results.table()`, `results.fit()` or `results.to_dict()`.
 
 A full run merges its results into
 `src/cs_survival_kit/_data/benchmarks.json` (or `--output FILE`), keyed by
-benchmark name, so re-running one file updates only its own entries. That file
-ships inside the package.
+benchmark name, so re-running one file updates only its own entries.
 
-Published numbers come from a single development machine, never from CI:
-shared runners are too noisy. CI only runs `--smoke`.
+The published numbers are not committed to this repository. When a release is
+built, the full suite runs on a GitHub-hosted runner against the released code
+and the results are built into the package, so every release is measured the
+same way and its numbers always match its code. An installed copy has them at
+`cs_survival_kit/_data/benchmarks.json`. Each entry records the library
+version, date, Python version and processor it was measured on.
+
+Hosted runners are shared, so absolute times vary from release to release.
+The slopes, and the ratios between cases in the same run, are stable.
+
+To benchmark a branch on the same kind of machine without releasing, run the
+**Benchmarks** workflow from the Actions tab. Locally, pass `--output` to keep
+your own results out of the tracked file:
+
+```bash
+python -m cs_survival_kit.bench --output /tmp/benchmarks.json
+```
 
 ## Local development
 

@@ -40,11 +40,17 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
       - uses: astral-sh/setup-uv@v10.2.0  # no moving major tag is published
+        with:
+          python-version: "3.13"
+      # The published benchmark numbers are measured here, on the released
+      # code, and built into the package. They are not committed to the repo.
+      - uses: ./.github/actions/run-benchmarks
       - run: uv build
       - uses: actions/upload-artifact@v7
         with:

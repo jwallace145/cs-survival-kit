@@ -103,5 +103,28 @@ code or lowering a threshold; write the missing test.
 
 ## Benchmarks
 
-Benchmark numbers come from Jimmy's machine, never from CI (shared runners are too noisy). CI may run
-benchmarks in a tiny `--smoke` mode to check that they execute; it must never write results.
+Published benchmark numbers are measured on a GitHub-hosted runner at release time, never on a
+developer's machine, so every release is measured the same way.
+
+- **Release** (`release.yml`, and the TestPyPI dry run): the `build` job runs the full suite against the
+  tagged code and writes the results into `src/cs_survival_kit/_data/benchmarks.json` just before
+  `uv build`, so they ship inside the wheel and sdist. The results are **not** committed. The copy of
+  `benchmarks.json` in the repository stays empty-but-valid; never commit numbers to it.
+- **On demand** (`benchmarks.yml`): `workflow_dispatch` on any branch runs the full suite and shows the
+  tables in the run summary. Use it to see the effect of a change before releasing. Nothing is written
+  back.
+- **Every PR** (`ci.yml`): `--smoke` only, to check that benchmarks execute.
+
+Shared runners are noisy and their hardware varies between runs, so treat absolute times as
+approximate. Slopes and the ratios between cases in the same run are reliable, and those are what the
+guide teaches. Each stored result records the Python version, platform and processor it ran on.
+
+**Time budget.** The full suite must stay under 10 minutes on a GitHub runner (the jobs time out at 20
+to 30). Runners are roughly two to three times slower than a recent laptop. When adding a benchmark:
+
+- keep each benchmark file under about two minutes locally
+- cap slow cases with a per-case `sizes=` so their largest run takes about a second
+- never add the full suite to `ci.yml` or any workflow that runs on every PR
+
+If the suite outgrows the budget, split `benchmarks.yml` and the release build into a matrix with one job
+per benchmark file and merge the JSON files, rather than raising the timeout.

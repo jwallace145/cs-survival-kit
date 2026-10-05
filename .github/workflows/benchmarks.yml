@@ -1,0 +1,42 @@
+# Runs the full benchmark suite on demand, on the same kind of runner that
+# produces the published numbers at release time. Nothing is committed or
+# published: the tables appear in the run summary and the JSON is attached to
+# the run as an artifact.
+#
+# Use it to see how a branch performs before releasing it: Actions tab →
+# Benchmarks → Run workflow → pick the branch.
+#
+# It also runs on pull requests that change the benchmark workflow itself, so
+# a change to this machinery is tested before it reaches a release.
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/benchmarks.yml
+      - .github/actions/run-benchmarks/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmarks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+    # The suite's time budget. See "Benchmarks" in AGENTS.md before raising it.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0  # no moving major tag is published
+        with:
+          python-version: "3.13"
+      - uses: ./.github/actions/run-benchmarks
+      - uses: actions/upload-artifact@v7
+        with:
+          name: benchmarks
+          path: src/cs_survival_kit/_data/benchmarks.json
+          if-no-files-found: error
