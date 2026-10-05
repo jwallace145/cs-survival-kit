@@ -18,13 +18,20 @@ This repository uses [Conventional Commits](https://www.conventionalcommits.org)
 Commit messages drive automated versioning and the changelog via
 [Release Please](https://github.com/googleapis/release-please).
 
-Pull requests are **squash-merged** (the only merge method enabled), so the
-**PR title and body become the commit on `main`**:
+Pull requests are **squash-merged** (the only merge method enabled), and the
+**PR title alone becomes the commit message on `main`**:
 
 - the PR title must be a Conventional Commit header
   (e.g. `feat(ds): add dynamic array`)
 - commits inside a PR branch can be messy; they get squashed away
-- a `BREAKING CHANGE:` footer, if ever needed, goes in the PR body
+- the PR description is not part of the commit, so it can contain anything:
+  code samples, tables, checklists
+- a breaking change is marked with `!` in the title (`feat(ds)!: ...`)
+
+The description is deliberately kept out of the commit. Release Please parses
+every commit message on `main`, and a description line that happens to look
+like a commit header (for example a code sample such as `Foo(bar=baz(1))`)
+makes the parse fail, which silently drops the commit from the next release.
 
 A GitHub Actions workflow (`Conventional Commits`) validates PR titles on pull
 requests and commit messages on pushes to `main`. There is nothing to install
@@ -48,8 +55,8 @@ locally.
 | `chore` | Maintenance, e.g. `chore(deps): update ruff` | none (shown in changelog) |
 | `build`, `ci`, `test`, `style` | Tooling and infrastructure | none (hidden from changelog) |
 
-While the project is in `0.x`, breaking changes (`feat!:` or a
-`BREAKING CHANGE:` footer) bump the minor version.
+While the project is in `0.x`, breaking changes (`feat!:`) bump the minor
+version.
 
 ### Scopes
 

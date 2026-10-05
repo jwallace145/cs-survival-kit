@@ -35,6 +35,10 @@ You also write tests for everything you build yourself (benchmark toolkit, scrip
 
 - **Commits:** Conventional Commits, validated by commitlint in CI. Squash-merge, so PR titles must also
   be conventional. Scopes: `ds`, `algo`, `bench`, `ci`, `release`, `docs`, `deps`, `repo`.
+  - The squash commit message is the **PR title only** (repo setting); the PR description is not part of
+    the commit. Mark a breaking change with `!` in the title, not a `BREAKING CHANGE:` footer.
+  - After a `feat` or `fix` PR merges, check that Release Please opened or updated its release PR. If it
+    did not, read the Release workflow log for "commit could not be parsed".
   - `feat(ds): add dynamic array` → minor bump; `fix(...)` → patch; `chore`/`ci`/`docs` → no release.
   - Study-module `feat` commits are Jimmy's. Use `feat(bench)` for toolkit features, `chore`/`ci` for
     plumbing.
