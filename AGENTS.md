@@ -55,6 +55,10 @@ When asked to stub a new data structure or algorithm, follow the pattern in
 `src/cs_survival_kit/data_structures/dynamic_array.py` exactly:
 
 - Typed signatures using PEP 695 generics (`class Foo[T]:`). Every body is `raise NotImplementedError`.
+- A list-like structure (ordered, indexable, appendable) subclasses
+  `cs_survival_kit.data_structures.AbstractList` and stubs all six of its operations, with matching
+  parameter names (`index`, `item`). Operations particular to the structure are added alongside. A stub
+  that subclasses it cannot be instantiated until every abstract operation has a body, which is fine.
 - Module docstring: `TODO: One-line summary...` plus an optional extended-description `TODO`.
 - Class docstring: summary `TODO`, extended-description `TODO`, a `Complexity:` section containing a
   markdown table with one row per public operation and `TODO` in every Time/Space cell, then `Args`,

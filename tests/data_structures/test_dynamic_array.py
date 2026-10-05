@@ -549,6 +549,96 @@ def test_array_works_with_builtins_that_iterate():
     assert 5 not in array
 
 
+# --- Membership ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize("item", [10, 20, 30])
+def test_contains_finds_an_item_at_any_position(item: int):
+    assert item in filled([10, 20, 30])
+
+
+def test_contains_is_false_for_an_item_that_is_absent():
+    array = filled([10, 20, 30])
+
+    assert 40 not in array
+    assert "10" not in array
+
+
+def test_contains_on_empty_array_is_false():
+    assert 1 not in DynamicArray[int]()
+
+
+def test_contains_ignores_unused_slots():
+    # Unused slots hold None internally; that must not count as an element.
+    assert None not in filled([1, 2, 3], capacity=16)
+    assert None not in DynamicArray[int | None]()
+
+
+def test_contains_finds_none_when_it_was_stored():
+    array = DynamicArray[int | None]()
+    array.append(1)
+    array.append(None)
+
+    assert None in array
+
+
+def test_contains_no_longer_finds_a_popped_item():
+    array = filled([1, 2, 3])
+
+    array.pop()
+
+    assert 3 not in array
+    assert 2 in array
+
+
+def test_contains_reflects_assignment():
+    array = filled([1, 2, 3])
+
+    array[1] = 20
+
+    assert 20 in array
+    assert 2 not in array
+
+
+def test_contains_compares_by_equality():
+    array = DynamicArray[object]()
+    array.append([1, 2])
+    array.append(1.0)
+
+    assert [1, 2] in array
+    assert 1 in array
+
+
+def test_contains_matches_by_identity_like_list_does():
+    # NaN is not equal to itself, but list still finds the same object.
+    nan = float("nan")
+    array = DynamicArray[float]()
+    array.append(nan)
+
+    assert nan in array
+    assert (nan in array) == (nan in [nan])
+    assert float("nan") not in array
+
+
+def test_contains_stops_at_the_first_match():
+    compared: list[int] = []
+
+    class Recorder:
+        def __init__(self, value: int) -> None:
+            self.value = value
+
+        def __eq__(self, other: object) -> bool:
+            compared.append(self.value)
+            return other == self.value
+
+    array = DynamicArray[Recorder]()
+    for value in (1, 2, 3):
+        array.append(Recorder(value))
+
+    assert 2 in array
+    assert compared == [1, 2]
+
+
 # --- repr ---------------------------------------------------------------------
 
 
@@ -631,6 +721,7 @@ def test_behaves_like_list_for_any_sequence_of_operations(
 
         assert len(array) == len(model)
         assert list(array) == model
+        assert (value in array) == (value in model)
         assert [array[i] for i in range(len(model))] == model
         assert array.capacity >= len(array)
 

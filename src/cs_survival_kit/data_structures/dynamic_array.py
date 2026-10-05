@@ -11,6 +11,8 @@ import math
 import typing
 from collections.abc import Callable, Iterator
 
+from cs_survival_kit.data_structures.abstract_list import AbstractList
+
 type GrowthPolicy = Callable[[int], int]
 """Maps the current capacity to the new capacity after an array resize.
 
@@ -119,7 +121,7 @@ def additive(step: int) -> GrowthPolicy:
     return add
 
 
-class DynamicArray[T]:
+class DynamicArray[T](AbstractList[T]):
     """A resizable array backed by fixed-capacity storage.
 
     Elements are stored in a fixed-size backing list of `capacity` slots,
@@ -138,6 +140,7 @@ class DynamicArray[T]:
         | `pop`              | O(1)                       | O(1)                       |
         | `a[i]`, `a[i] = x` | O(1)                       | O(1)                       |
         | `len(a)`           | O(1)                       | O(1)                       |
+        | `item in a`        | O(n)                       | O(1)                       |
         | iteration          | O(n)                       | O(1)                       |
         | resize             | O(n)                       | O(n)                       |
 
@@ -264,6 +267,38 @@ class DynamicArray[T]:
         """
         for i in range(self._size):
             yield typing.cast(T, self._items[i])
+
+    def __contains__(self, item: object) -> bool:
+        """Return whether `item` is in the array.
+
+        Checks the elements in index order and stops at the first match. An
+        element matches if it is `item` or equals it, the same rule that
+        `list` uses. Unused slots are never examined, so `None in a` is
+        `True` only if `None` was actually stored.
+
+        Args:
+            item: The value to look for.
+
+        Returns:
+            `True` if some element is `item` or equals it, otherwise `False`.
+
+        Complexity:
+            - Time: O(n), since the elements are not ordered and each one may
+              have to be checked; O(1) if the first element matches
+            - Space: O(1)
+
+        Examples:
+            >>> a = DynamicArray[int]()
+            >>> a.append(1)
+            >>> 1 in a, 2 in a
+            (True, False)
+        """
+        for i in range(self._size):
+            element = self._items[i]
+            if element is item or element == item:
+                return True
+
+        return False
 
     def __repr__(self) -> str:
         """Return a string showing the class name and the elements, like `list`.
