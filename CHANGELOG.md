@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.2.0...v0.3.0) (2026-10-05)
+
+
+### Features
+
+* **ds:** export growth policies from the data_structures package ([25be992](https://github.com/jwallace145/cs-survival-kit/commit/25be99238e8424f41469425359e2d3b5d292f881))
+
 ## [0.2.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.1.0...v0.2.0) (2026-10-05)
 
 
