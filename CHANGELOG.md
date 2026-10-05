@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.5.0...v0.6.0) (2026-10-05)
+
+
+### Features
+
+* **ds:** add singly linked list ([#19](https://github.com/jwallace145/cs-survival-kit/issues/19)) ([13d00f5](https://github.com/jwallace145/cs-survival-kit/commit/13d00f5aba61b8a5fa65669735e01b62c9e575b4))
+
 ## [0.5.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.4.0...v0.5.0) (2026-10-05)
 
 
