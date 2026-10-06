@@ -155,10 +155,13 @@ class DynamicArray[T](AbstractList[T]):
         | `item in a`        | O(n)                       | O(1)                       |
         | iteration          | O(n)                       | O(1)                       |
         | `reversed(a)`      | O(n)                       | O(1)                       |
+        | `reverse`          | O(n)                       | O(1)                       |
         | resize             | O(n)                       | O(n)                       |
 
         `insert` at index `i` shifts `n - i` elements, so it is O(1) at the
-        end and O(n) at the front; `pop` likewise. The amortized bounds
+        end and O(n) at the front; `pop` likewise. `reverse` is the inherited
+        default, swapping inward from both ends, which an array can do
+        because both ends are O(1) away. The amortized bounds
         assume a geometric growth policy such as the default `doubling`.
         With an `additive` policy, `append` is amortized O(n). Total storage
         is O(capacity). For an array built by appends alone, `doubling` keeps
