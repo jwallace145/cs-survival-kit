@@ -24,14 +24,17 @@ class AbstractList[T](ABC):
     iteration, `a[i]`, `a[i] = x`, `insert` and `pop`. A subclass that leaves
     out any primitive cannot be instantiated.
 
-    **Seven defaults** are inherited. Each is written here once, in terms of
+    **Eight defaults** are inherited. Each is written here once, in terms of
     the primitives: `append` is `insert` at the end, `prepend` is `insert` at
     0, `pop_front` and `pop_back` are `pop` at either end, `remove` is a scan
-    followed by `pop`, and `item in a` and `repr(a)` are scans. An
+    followed by `pop`, `item in a` and `repr(a)` are scans, and
+    `reversed(a)` reads `a[i]` from the last position down to 0. An
     implementation may override a default, but it rarely needs to: the cost
     of each default is simply the cost of the primitive it calls at that
     position, and an implementation whose `insert` is O(1) at index 0 gets an
-    O(1) `prepend` for free.
+    O(1) `prepend` for free. The exception is `reversed(a)`, which is only as
+    cheap as indexing: a structure that cannot index in O(1) overrides it, or
+    accepts the quadratic default.
 
     Every index is a non-negative position. `a[i]`, `a[i] = x` and `pop`
     accept `0 <= index < len(a)`; `insert` also accepts `index == len(a)`,
@@ -53,6 +56,7 @@ class AbstractList[T](ABC):
         | `remove`     | one iteration to find the index, then `pop` |
         | `item in a`  | one iteration                              |
         | `repr(a)`    | one iteration                              |
+        | `reversed(a)`| `a[i]` for every `i`, from the last down   |
 
     Examples:
         The base class cannot be instantiated; an implementation can.
@@ -80,6 +84,13 @@ class AbstractList[T](ABC):
         >>> a.remove(2)
         >>> len(a)
         0
+
+        `reversed` walks the elements backward without changing the list:
+
+        >>> a.append(1)
+        >>> a.append(2)
+        >>> list(reversed(a)), list(a)
+        ([2, 1], [1, 2])
     """
 
     # --- Primitives: every implementation supplies these -----------------
@@ -202,6 +213,28 @@ class AbstractList[T](ABC):
             A string such as `DynamicArray([1, 2, 3])`.
         """
         return f"{type(self).__name__}({list(self)})"
+
+    def __reversed__(self) -> Iterator[T]:
+        """Iterate over the elements from the last position down to 0.
+
+        This is what the built-in `reversed(a)` calls. The list is not
+        changed; compare `reverse`, which some structures offer to rewire
+        themselves in place.
+
+        The default reads each position by index, so it is only as cheap as
+        `a[i]`: linear on an array, quadratic on a linked list that walks to
+        each index. A structure that can do better, such as a doubly linked
+        list following its backward links, overrides this.
+
+        Yields:
+            Each element, starting with the one at position `len(self) - 1`.
+
+        Complexity:
+            - Time: `len(self)` reads of `a[i]`, each at that index's cost
+            - Space: O(1)
+        """
+        for index in range(len(self) - 1, -1, -1):
+            yield self[index]
 
     def append(self, item: T) -> None:
         """Add `item` to the end of the list.

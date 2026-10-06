@@ -58,7 +58,8 @@ When asked to stub a new data structure or algorithm, follow the pattern in
 - A list-like structure (ordered, indexable, appendable) subclasses
   `cs_survival_kit.data_structures.AbstractList` and stubs its six primitives (`__len__`, `__iter__`,
   `__getitem__`, `__setitem__`, `insert`, `pop`), with matching parameter names (`index`, `item`). The
-  defaults (`append`, `prepend`, `pop_front`, `pop_back`, `remove`, `__contains__`, `__repr__`) are
+  defaults (`append`, `prepend`, `pop_front`, `pop_back`, `remove`, `__contains__`, `__repr__`,
+  `__reversed__`) are
   inherited and are not stubbed, but the class's `Complexity:` table still gets a row for each of them.
   Operations particular to the structure are added alongside. A stub that subclasses it cannot be
   instantiated until every primitive has a body, which is fine.

@@ -15,6 +15,7 @@ PRIMITIVES = {"__len__", "__iter__", "__getitem__", "__setitem__", "insert", "po
 DEFAULTS = {
     "__contains__",
     "__repr__",
+    "__reversed__",
     "append",
     "prepend",
     "pop_front",
@@ -256,6 +257,38 @@ def test_default_contains_on_an_empty_list_is_false():
     assert 1 not in ListBacked[int]()
 
 
+def test_default_reversed_yields_the_elements_from_last_to_first():
+    assert list(reversed(list_backed([1, 2, 3]))) == [3, 2, 1]
+
+
+def test_default_reversed_on_an_empty_list_yields_nothing():
+    assert list(reversed(ListBacked[int]())) == []
+
+
+def test_default_reversed_does_not_change_the_list():
+    items = list_backed([1, 2, 3])
+
+    list(reversed(items))
+
+    assert list(items) == [1, 2, 3]
+
+
+def test_default_reversed_reads_each_position_once_through_getitem():
+    reads: list[int] = []
+
+    class Recording(ListBacked[int]):
+        def __getitem__(self, index: int) -> int:
+            reads.append(index)
+            return super().__getitem__(index)
+
+    items = Recording()
+    for item in (1, 2, 3):
+        items.append(item)
+
+    assert list(reversed(items)) == [3, 2, 1]
+    assert reads == [2, 1, 0]
+
+
 def test_default_repr_shows_the_class_name_and_the_elements():
     assert repr(list_backed([1, 2])) == "ListBacked([1, 2])"
     assert repr(ListBacked[int]()) == "ListBacked([])"
@@ -439,6 +472,15 @@ def test_remove_takes_out_the_first_match_for_any_implementation(make):
 
 
 @pytest.mark.parametrize("make", IMPLEMENTATIONS)
+def test_reversed_walks_backward_for_any_implementation(make):
+    items = fill(make(), 5)
+
+    assert list(reversed(items)) == [4, 3, 2, 1, 0]
+    assert list(items) == [0, 1, 2, 3, 4]
+    assert list(reversed(make())) == []
+
+
+@pytest.mark.parametrize("make", IMPLEMENTATIONS)
 def test_repr_names_the_implementation_for_any_implementation(make):
     items = fill(make(), 2)
 
@@ -530,4 +572,5 @@ def test_any_implementation_behaves_like_list_for_any_sequence_of_operations(
         assert list(items) == model
         assert (value in items) == (value in model)
         assert [items[i] for i in range(len(model))] == model
+        assert list(reversed(items)) == model[::-1]
         assert repr(items) == f"{make.__name__}({model})"

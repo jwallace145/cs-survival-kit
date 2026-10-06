@@ -154,6 +154,7 @@ class DynamicArray[T](AbstractList[T]):
         | `len(a)`           | O(1)                       | O(1)                       |
         | `item in a`        | O(n)                       | O(1)                       |
         | iteration          | O(n)                       | O(1)                       |
+        | `reversed(a)`      | O(n)                       | O(1)                       |
         | resize             | O(n)                       | O(n)                       |
 
         `insert` at index `i` shifts `n - i` elements, so it is O(1) at the
