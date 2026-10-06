@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.6.0...v0.7.0) (2026-10-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ds:** standardize the list interface and stub the doubly linked list ([#21](https://github.com/jwallace145/cs-survival-kit/issues/21))
+
+### Features
+
+* **bench:** add doubly linked list benchmarks ([#25](https://github.com/jwallace145/cs-survival-kit/issues/25)) ([95905aa](https://github.com/jwallace145/cs-survival-kit/commit/95905aa7049461f9bfa90d39d7f370bd7dfd6b4c))
+* **ds:** add __reversed__ as an AbstractList default ([c6374ae](https://github.com/jwallace145/cs-survival-kit/commit/c6374ae55e2d9dace1e066331b4a0e8f23a9a255))
+* **ds:** add doubly linked list ([#24](https://github.com/jwallace145/cs-survival-kit/issues/24)) ([3a44605](https://github.com/jwallace145/cs-survival-kit/commit/3a44605089e47e45b2b14c2a23f0dfa65b3a33a6))
+* **ds:** add reverse as an AbstractList default ([#23](https://github.com/jwallace145/cs-survival-kit/issues/23)) ([43ba048](https://github.com/jwallace145/cs-survival-kit/commit/43ba04869687f23cc86caa9086594d360dc4e5a7))
+* **ds:** standardize the list interface and stub the doubly linked list ([#21](https://github.com/jwallace145/cs-survival-kit/issues/21)) ([e194bac](https://github.com/jwallace145/cs-survival-kit/commit/e194bac4d05224af86bbda5a75d3d1d355157564))
+
 ## [0.6.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.5.0...v0.6.0) (2026-10-05)
 
 
