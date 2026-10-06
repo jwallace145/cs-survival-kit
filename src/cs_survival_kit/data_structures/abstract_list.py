@@ -27,16 +27,22 @@ class AbstractList[T](ABC):
     **Nine defaults** are inherited. Each is written here once, in terms of
     the primitives: `append` is `insert` at the end, `prepend` is `insert` at
     0, `pop_front` and `pop_back` are `pop` at either end, `remove` is a scan
-    followed by `pop`, `item in a` and `repr(a)` are scans, `reversed(a)`
-    reads `a[i]` from the last position down to 0, and `reverse` swaps
-    `a[i]` with `a[n - 1 - i]` inward from both ends. An implementation may
-    override a default, but it rarely needs to: the cost of each default is
-    simply the cost of the primitive it calls at that position, and an
-    implementation whose `insert` is O(1) at index 0 gets an O(1) `prepend`
-    for free. The exceptions are `reversed(a)` and `reverse`, which are only
-    as cheap as indexing: a structure that cannot index in O(1) overrides
-    them with an algorithm suited to its storage, or accepts the quadratic
-    default.
+    followed by `pop`, `item in a` and `repr(a)` are scans, `reversed(a)` is
+    one scan buffered and yielded backward, and `reverse` swaps `a[i]` with
+    `a[n - 1 - i]` inward from both ends. An implementation may override a
+    default, but it rarely needs to: the cost of each default is simply the
+    cost of the primitive it calls at that position, and an implementation
+    whose `insert` is O(1) at index 0 gets an O(1) `prepend` for free.
+
+    Two defaults deserve a closer look. `reverse` is only as cheap as
+    indexing, so a structure that cannot index in O(1) overrides it with an
+    algorithm suited to its storage. `reversed(a)` could have been written
+    the same way, as `a[i]` from the last position down, but that is
+    quadratic on a linked list. Instead it spends O(n) auxiliary space on a
+    buffer so that it is linear on every implementation. A structure that
+    can walk backward without the buffer, such as an array by index or a
+    doubly linked list by its backward links, overrides it to get the space
+    back.
 
     Every index is a non-negative position. `a[i]`, `a[i] = x` and `pop`
     accept `0 <= index < len(a)`; `insert` also accepts `index == len(a)`,
@@ -58,7 +64,7 @@ class AbstractList[T](ABC):
         | `remove`     | one iteration to find the index, then `pop` |
         | `item in a`  | one iteration                              |
         | `repr(a)`    | one iteration                              |
-        | `reversed(a)`| `a[i]` for every `i`, from the last down   |
+        | `reversed(a)`| one iteration into a buffer, yielded backward |
         | `reverse`    | `n / 2` swaps, each two `a[i]` reads and two writes |
 
     Examples:
@@ -228,20 +234,29 @@ class AbstractList[T](ABC):
         changed; compare `reverse`, which some structures offer to rewire
         themselves in place.
 
-        The default reads each position by index, so it is only as cheap as
-        `a[i]`: linear on an array, quadratic on a linked list that walks to
-        each index. A structure that can do better, such as a doubly linked
-        list following its backward links, overrides this.
+        The default iterates forward once into a buffer, then yields the
+        buffer from its end. The buffer costs O(n) auxiliary space, and that
+        is a deliberate trade. The alternative, reading `a[i]` from the last
+        position down, needs no extra memory but is only as cheap as
+        indexing, which is quadratic on a linked list that walks to each
+        index. A linear default that every implementation can inherit beats
+        a constant-space default that some cannot afford. A structure that
+        can walk backward in O(1) space overrides this: an array reads by
+        index, and a doubly linked list follows its backward links.
+
+        The buffer is filled when iteration starts, not when `reversed(a)`
+        is called, and it is a snapshot: changes made to the list after the
+        first element has been yielded do not affect the rest.
 
         Yields:
             Each element, starting with the one at position `len(self) - 1`.
 
         Complexity:
-            - Time: `len(self)` reads of `a[i]`, each at that index's cost
-            - Space: O(1)
+            - Time: O(n), one iteration plus one pass over the buffer
+            - Space: O(n) for the buffer
         """
-        for index in range(len(self) - 1, -1, -1):
-            yield self[index]
+        buffer = list(self)
+        yield from reversed(buffer)
 
     def reverse(self) -> None:
         """Reverse the order of the elements in place.

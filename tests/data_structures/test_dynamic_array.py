@@ -797,6 +797,82 @@ def test_array_works_with_builtins_that_iterate():
     assert 5 not in array
 
 
+# --- Reverse iteration --------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [([], []), ([1], [1]), ([1, 2], [2, 1]), ([3, 1, 2], [2, 1, 3])],
+    ids=["empty", "one", "two", "three"],
+)
+def test_reversed_yields_items_from_last_to_first(
+    source: list[int], expected: list[int]
+):
+    assert list(reversed(filled(source))) == expected
+
+
+def test_reversed_does_not_change_the_array():
+    array = filled([1, 2, 3])
+
+    list(reversed(array))
+
+    assert list(array) == [1, 2, 3]
+    assert len(array) == 3
+
+
+def test_reversed_iterators_are_independent():
+    array = filled([1, 2, 3])
+    first, second = reversed(array), reversed(array)
+
+    assert next(first) == 3
+    assert next(first) == 2
+    assert next(second) == 3
+
+
+def test_reversed_visits_only_the_used_slots():
+    array = filled([1, 2, 3], capacity=1)
+
+    assert array.capacity > 3
+    assert list(reversed(array)) == [3, 2, 1]
+
+
+def test_reversed_follows_changes_at_both_ends():
+    array = filled([2])
+
+    array.prepend(1)
+    array.append(3)
+    assert list(reversed(array)) == [3, 2, 1]
+
+    array.pop_front()
+    array.pop_back()
+    assert list(reversed(array)) == [2]
+
+
+def test_reversed_walks_by_index_without_a_forward_pass():
+    # The override exists to avoid the inherited default's O(n) buffer, which
+    # is filled by one forward iteration. Walking by index means no forward
+    # iteration happens at all.
+    iterations = 0
+
+    class Recording(DynamicArray[int]):
+        def __iter__(self):
+            nonlocal iterations
+            iterations += 1
+            return super().__iter__()
+
+    array = Recording()
+    for item in (1, 2, 3):
+        array.append(item)
+
+    assert list(reversed(array)) == [3, 2, 1]
+    assert iterations == 0
+
+
+@given(source=st.lists(st.integers(), max_size=50))
+def test_reversed_agrees_with_a_builtin_list_for_any_contents(source: list[int]):
+    assert list(reversed(filled(source))) == source[::-1]
+
+
 # --- Membership ---------------------------------------------------------------
 
 

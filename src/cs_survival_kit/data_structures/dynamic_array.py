@@ -161,7 +161,10 @@ class DynamicArray[T](AbstractList[T]):
         `insert` at index `i` shifts `n - i` elements, so it is O(1) at the
         end and O(n) at the front; `pop` likewise. `reverse` is the inherited
         default, swapping inward from both ends, which an array can do
-        because both ends are O(1) away. The amortized bounds
+        because both ends are O(1) away. `reversed(a)` overrides the inherited
+        default, which buffers a forward pass in O(n) space, with a backward
+        walk by index: `a[i]` is O(1), so the buffer would buy nothing. The
+        amortized bounds
         assume a geometric growth policy such as the default `doubling`.
         With an `additive` policy, `append` is amortized O(n). Total storage
         is O(capacity). For an array built by appends alone, `doubling` keeps
@@ -288,6 +291,31 @@ class DynamicArray[T](AbstractList[T]):
             - Space: O(1)
         """
         for i in range(self._size):
+            yield typing.cast(T, self._items[i])
+
+    def __reversed__(self) -> Iterator[T]:
+        """Iterate over the elements from index `len(self) - 1` down to 0.
+
+        Overrides the inherited default, which buffers one forward pass in
+        O(n) auxiliary space so that it stays linear on structures that
+        cannot index cheaply. An array indexes in O(1), so it walks backward
+        by index instead and needs no buffer.
+
+        Yields:
+            Each element, starting with the one at index `len(self) - 1`.
+
+        Complexity:
+            - Time: O(n) to exhaust the iterator
+            - Space: O(1)
+
+        Examples:
+            >>> a = DynamicArray[int]()
+            >>> a.append(1)
+            >>> a.append(2)
+            >>> list(reversed(a))
+            [2, 1]
+        """
+        for i in range(self._size - 1, -1, -1):
             yield typing.cast(T, self._items[i])
 
     def insert(self, index: int, item: T) -> None:
