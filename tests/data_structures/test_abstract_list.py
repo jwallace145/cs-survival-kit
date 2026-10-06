@@ -16,6 +16,7 @@ DEFAULTS = {
     "__contains__",
     "__repr__",
     "__reversed__",
+    "reverse",
     "append",
     "prepend",
     "pop_front",
@@ -289,6 +290,69 @@ def test_default_reversed_reads_each_position_once_through_getitem():
     assert reads == [2, 1, 0]
 
 
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ([], []),
+        ([1], [1]),
+        ([1, 2], [2, 1]),
+        ([1, 2, 3], [3, 2, 1]),
+        ([1, 2, 3, 4], [4, 3, 2, 1]),
+        ([1, 2, 3, 4, 5], [5, 4, 3, 2, 1]),
+    ],
+    ids=["empty", "one", "two", "three", "four", "five"],
+)
+def test_default_reverse_reverses_in_place(source: list[int], expected: list[int]):
+    items = list_backed(source)
+
+    assert items.reverse() is None
+    assert list(items) == expected
+    assert len(items) == len(expected)
+
+
+def test_default_reverse_twice_restores_the_original_order():
+    items = list_backed([1, 2, 3, 4])
+
+    items.reverse()
+    items.reverse()
+
+    assert list(items) == [1, 2, 3, 4]
+
+
+def test_default_reverse_keeps_the_same_item_objects():
+    first, second = object(), object()
+    items = ListBacked[object]()
+    items.append(first)
+    items.append(second)
+
+    items.reverse()
+
+    assert items[0] is second
+    assert items[1] is first
+
+
+@pytest.mark.parametrize(("count", "swaps"), [(0, 0), (1, 0), (2, 1), (5, 2), (6, 3)])
+def test_default_reverse_swaps_inward_from_both_ends(count: int, swaps: int):
+    writes: list[tuple[int, int]] = []
+
+    class Recording(ListBacked[int]):
+        def __setitem__(self, index: int, item: int) -> None:
+            writes.append((index, item))
+            super().__setitem__(index, item)
+
+    items = Recording()
+    for item in range(count):
+        items.append(item)
+
+    items.reverse()
+
+    assert list(items) == list(range(count - 1, -1, -1))
+    assert len(writes) == 2 * swaps
+    # each swap writes the pair (i, n - 1 - i), moving inward
+    assert [index for index, _ in writes[0::2]] == list(range(swaps))
+    assert [index for index, _ in writes[1::2]] == [count - 1 - i for i in range(swaps)]
+
+
 def test_default_repr_shows_the_class_name_and_the_elements():
     assert repr(list_backed([1, 2])) == "ListBacked([1, 2])"
     assert repr(ListBacked[int]()) == "ListBacked([])"
@@ -481,6 +545,23 @@ def test_reversed_walks_backward_for_any_implementation(make):
 
 
 @pytest.mark.parametrize("make", IMPLEMENTATIONS)
+def test_reverse_reverses_in_place_for_any_implementation(make):
+    items = fill(make(), 5)
+
+    items.reverse()
+
+    assert list(items) == [4, 3, 2, 1, 0]
+    assert len(items) == 5
+    items.append(9)
+    items.prepend(-1)
+    assert list(items) == [-1, 4, 3, 2, 1, 0, 9]
+
+    empty = make()
+    empty.reverse()
+    assert list(empty) == []
+
+
+@pytest.mark.parametrize("make", IMPLEMENTATIONS)
 def test_repr_names_the_implementation_for_any_implementation(make):
     items = fill(make(), 2)
 
@@ -506,6 +587,7 @@ operations = st.lists(
                 "pop_front",
                 "pop_back",
                 "remove",
+                "reverse",
             ]
         ),
         st.integers(min_value=0, max_value=20),
@@ -561,6 +643,9 @@ def test_any_implementation_behaves_like_list_for_any_sequence_of_operations(
             else:
                 with pytest.raises(IndexError):
                     items.pop_back()
+        elif name == "reverse":
+            items.reverse()
+            model.reverse()
         elif value in model:
             items.remove(value)
             model.remove(value)

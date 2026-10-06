@@ -339,6 +339,11 @@ class SinglyLinkedList[T](AbstractList[T]):
         the walk ends, the old tail is the new head and the old head is the new
         tail. No nodes are allocated or copied.
 
+        This overrides the inherited default, which swaps `a[i]` with its
+        mirror from both ends inward. That algorithm suits an array, where
+        every index is O(1) away, but here each index is a walk from the head,
+        so the default would be O(n²). Rewiring the links is O(n).
+
         Complexity:
             - Time: O(n)
             - Space: O(1)

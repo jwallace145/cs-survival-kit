@@ -693,6 +693,51 @@ def test_remove_ignores_unused_slots():
         array.remove(None)  # pyright: ignore[reportArgumentType]
 
 
+# --- Inherited: reverse -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [([], []), ([1], [1]), ([1, 2], [2, 1]), ([1, 2, 3], [3, 2, 1])],
+    ids=["empty", "one", "two", "three"],
+)
+def test_reverse_reverses_the_items_in_place(source: list[int], expected: list[int]):
+    array = filled(source, capacity=8)
+
+    array.reverse()
+
+    assert list(array) == expected
+
+
+def test_reverse_does_not_change_length_or_capacity():
+    array = filled([1, 2, 3], capacity=8)
+
+    array.reverse()
+
+    assert len(array) == 3
+    assert array.capacity == 8
+
+
+def test_reverse_ignores_unused_slots():
+    array = filled([1, 2, 3], capacity=8)
+
+    array.reverse()
+
+    assert list(array) == [3, 2, 1]
+    assert None not in array
+    with pytest.raises(IndexError):
+        array[3]
+
+
+def test_append_after_reverse_goes_to_the_new_end():
+    array = filled([1, 2, 3])
+    array.reverse()
+
+    array.append(0)
+
+    assert list(array) == [3, 2, 1, 0]
+
+
 # --- Iteration ----------------------------------------------------------------
 
 

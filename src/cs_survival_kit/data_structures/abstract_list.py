@@ -24,17 +24,19 @@ class AbstractList[T](ABC):
     iteration, `a[i]`, `a[i] = x`, `insert` and `pop`. A subclass that leaves
     out any primitive cannot be instantiated.
 
-    **Eight defaults** are inherited. Each is written here once, in terms of
+    **Nine defaults** are inherited. Each is written here once, in terms of
     the primitives: `append` is `insert` at the end, `prepend` is `insert` at
     0, `pop_front` and `pop_back` are `pop` at either end, `remove` is a scan
-    followed by `pop`, `item in a` and `repr(a)` are scans, and
-    `reversed(a)` reads `a[i]` from the last position down to 0. An
-    implementation may override a default, but it rarely needs to: the cost
-    of each default is simply the cost of the primitive it calls at that
-    position, and an implementation whose `insert` is O(1) at index 0 gets an
-    O(1) `prepend` for free. The exception is `reversed(a)`, which is only as
-    cheap as indexing: a structure that cannot index in O(1) overrides it, or
-    accepts the quadratic default.
+    followed by `pop`, `item in a` and `repr(a)` are scans, `reversed(a)`
+    reads `a[i]` from the last position down to 0, and `reverse` swaps
+    `a[i]` with `a[n - 1 - i]` inward from both ends. An implementation may
+    override a default, but it rarely needs to: the cost of each default is
+    simply the cost of the primitive it calls at that position, and an
+    implementation whose `insert` is O(1) at index 0 gets an O(1) `prepend`
+    for free. The exceptions are `reversed(a)` and `reverse`, which are only
+    as cheap as indexing: a structure that cannot index in O(1) overrides
+    them with an algorithm suited to its storage, or accepts the quadratic
+    default.
 
     Every index is a non-negative position. `a[i]`, `a[i] = x` and `pop`
     accept `0 <= index < len(a)`; `insert` also accepts `index == len(a)`,
@@ -57,6 +59,7 @@ class AbstractList[T](ABC):
         | `item in a`  | one iteration                              |
         | `repr(a)`    | one iteration                              |
         | `reversed(a)`| `a[i]` for every `i`, from the last down   |
+        | `reverse`    | `n / 2` swaps, each two `a[i]` reads and two writes |
 
     Examples:
         The base class cannot be instantiated; an implementation can.
@@ -85,12 +88,16 @@ class AbstractList[T](ABC):
         >>> len(a)
         0
 
-        `reversed` walks the elements backward without changing the list:
+        `reversed` walks the elements backward without changing the list;
+        `reverse` changes the list:
 
         >>> a.append(1)
         >>> a.append(2)
         >>> list(reversed(a)), list(a)
         ([2, 1], [1, 2])
+        >>> a.reverse()
+        >>> list(a)
+        [2, 1]
     """
 
     # --- Primitives: every implementation supplies these -----------------
@@ -235,6 +242,31 @@ class AbstractList[T](ABC):
         """
         for index in range(len(self) - 1, -1, -1):
             yield self[index]
+
+    def reverse(self) -> None:
+        """Reverse the order of the elements in place.
+
+        Afterwards the element that was last is at position 0, and so on.
+        Compare `reversed(a)`, which visits the elements backward and changes
+        nothing.
+
+        The default is the array algorithm: swap the first element with the
+        last, the second with the second-to-last, and so on, meeting in the
+        middle after `n // 2` swaps. It needs nothing but indexing, so on an
+        array it is O(n) with O(1) extra space. A linked list cannot index
+        cheaply, so it overrides this with an algorithm suited to links: a
+        singly linked list re-points every `next` at the node before it, and
+        a doubly linked list swaps `prev` and `next` on every node.
+
+        Complexity:
+            - Time: `n // 2` swaps, each two reads and two writes of `a[i]`
+              at that index's cost
+            - Space: O(1)
+        """
+        count = len(self)
+        for index in range(count // 2):
+            mirror = count - 1 - index
+            self[index], self[mirror] = self[mirror], self[index]
 
     def append(self, item: T) -> None:
         """Add `item` to the end of the list.
