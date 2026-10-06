@@ -274,10 +274,18 @@ def test_default_reversed_does_not_change_the_list():
     assert list(items) == [1, 2, 3]
 
 
-def test_default_reversed_reads_each_position_once_through_getitem():
+def test_default_reversed_iterates_once_and_never_indexes():
+    # The default buffers one forward pass rather than reading a[i] from the
+    # end, so that it is linear on a structure whose indexing is O(n).
+    iterations = 0
     reads: list[int] = []
 
     class Recording(ListBacked[int]):
+        def __iter__(self) -> Iterator[int]:
+            nonlocal iterations
+            iterations += 1
+            return super().__iter__()
+
         def __getitem__(self, index: int) -> int:
             reads.append(index)
             return super().__getitem__(index)
@@ -287,7 +295,19 @@ def test_default_reversed_reads_each_position_once_through_getitem():
         items.append(item)
 
     assert list(reversed(items)) == [3, 2, 1]
-    assert reads == [2, 1, 0]
+    assert iterations == 1
+    assert reads == []
+
+
+def test_default_reversed_buffers_when_iteration_starts():
+    items = list_backed([1, 2, 3])
+    iterator = reversed(items)
+
+    items.append(4)
+    assert next(iterator) == 4
+
+    items.append(5)
+    assert list(iterator) == [3, 2, 1]
 
 
 @pytest.mark.parametrize(

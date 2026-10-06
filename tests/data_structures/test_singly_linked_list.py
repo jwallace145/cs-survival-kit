@@ -172,6 +172,72 @@ def test_a_long_list_can_be_iterated_without_recursion_errors():
     assert sum(SinglyLinkedList(range(50_000))) == sum(range(50_000))
 
 
+# --- Reverse iteration --------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [([], []), ([1], [1]), ([1, 2], [2, 1]), ([3, 1, 2], [2, 1, 3])],
+    ids=["empty", "one", "two", "three"],
+)
+def test_reversed_yields_items_from_tail_to_head(
+    source: list[int], expected: list[int]
+):
+    assert list(reversed(SinglyLinkedList(source))) == expected
+
+
+def test_reversed_does_not_change_the_list():
+    items = SinglyLinkedList([1, 2, 3])
+
+    list(reversed(items))
+
+    assert_consistent(items, [1, 2, 3])
+
+
+def test_reversed_iterators_are_independent():
+    items = SinglyLinkedList([1, 2, 3])
+    first, second = reversed(items), reversed(items)
+
+    assert next(first) == 3
+    assert next(first) == 2
+    assert next(second) == 3
+
+
+def test_reversed_follows_changes_at_both_ends():
+    items = SinglyLinkedList([2])
+
+    items.prepend(1)
+    items.append(3)
+    assert list(reversed(items)) == [3, 2, 1]
+
+    items.pop_front()
+    items.pop_back()
+    assert list(reversed(items)) == [2]
+
+
+def test_reversed_after_reverse_yields_the_original_order():
+    items = SinglyLinkedList([1, 2, 3])
+
+    items.reverse()
+
+    assert list(reversed(items)) == [1, 2, 3]
+
+
+def test_a_long_list_can_be_reverse_iterated_in_linear_time():
+    # The inherited default buffers one forward pass, so this is 50,000
+    # steps. Reading each index from the head instead would be over a
+    # billion, and this test would take seconds rather than milliseconds.
+    # The precise guard is in test_abstract_list; this one shows the scale.
+    items = SinglyLinkedList(range(50_000))
+
+    assert list(reversed(items)) == list(range(49_999, -1, -1))
+
+
+@given(source=st.lists(st.integers(), max_size=50))
+def test_reversed_agrees_with_a_builtin_list_for_any_contents(source: list[int]):
+    assert list(reversed(SinglyLinkedList(source))) == source[::-1]
+
+
 # --- Reading by index ---------------------------------------------------------
 
 

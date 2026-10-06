@@ -71,13 +71,16 @@ class SinglyLinkedList[T](AbstractList[T]):
         | `len(a)`           | O(1) | O(1)  |
         | `item in a`        | O(n) | O(1)  |
         | iteration          | O(n) | O(1)  |
-        | `reversed(a)`      | O(n²)| O(1)  |
+        | `reversed(a)`      | O(n) | O(n)  |
 
         `insert` and `pop` at index `i` follow O(i) links, so they are O(1)
         at the front. `insert` is also O(1) at the end, thanks to the tail
-        reference. `reversed(a)` is the inherited default, which reads every
-        index, and each read walks from the head; nodes have no backward link
-        to follow. Total storage is O(n): one node per element.
+        reference. `reversed(a)` is the inherited default, which iterates
+        once into a buffer and yields it backward. The buffer is O(n) extra
+        space, and it is the price of linear time: nodes have no backward
+        link to follow, so reading each index from the last one down would
+        walk from the head every time and cost O(n²). Total storage is O(n):
+        one node per element.
 
     Args:
         items: Elements to add to the new list, in order. Defaults to empty.
