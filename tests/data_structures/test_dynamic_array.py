@@ -21,6 +21,48 @@ def filled(items: list[int], **kwargs) -> DynamicArray[int]:
     return array
 
 
+# --- Constructor: items -------------------------------------------------------
+
+
+def test_empty_by_default():
+    array = DynamicArray[int]()
+    assert len(array) == 0
+    assert list(array) == []
+
+
+@pytest.mark.parametrize(
+    "items", [[], [1], [3, 1, 2], list(range(100))], ids=["empty", "one", "few", "many"]
+)
+def test_constructor_takes_the_initial_elements_in_order(items: list[int]):
+    assert list(DynamicArray(items)) == items
+
+
+def test_constructor_accepts_any_iterable():
+    assert list(DynamicArray(range(3))) == [0, 1, 2]
+    assert list(DynamicArray(x * x for x in range(3))) == [0, 1, 4]
+
+
+def test_constructor_grows_past_the_initial_capacity():
+    array = DynamicArray(range(10), capacity=1)
+    assert list(array) == list(range(10))
+    assert array.capacity >= 10
+
+
+def test_constructor_with_items_still_honours_the_growth_policy():
+    array = DynamicArray(range(3), capacity=2, growth=additive(3))
+    assert array.capacity == 5
+
+
+def test_capacity_is_keyword_only():
+    with pytest.raises(TypeError):
+        DynamicArray[int](8)  # type: ignore[arg-type]
+
+
+@given(st.lists(st.integers()))
+def test_constructing_from_items_matches_appending_them(items: list[int]):
+    assert list(DynamicArray(items)) == list(filled(items))
+
+
 # --- Growth policies: doubling ------------------------------------------------
 
 
