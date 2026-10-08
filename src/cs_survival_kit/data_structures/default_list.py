@@ -12,25 +12,18 @@ front, which a dynamic array does in O(n). That decision is what the
 individual structures and their guide pages are for.
 """
 
-from collections.abc import Iterable
-
-from cs_survival_kit.data_structures.dynamic_array import (
-    DynamicArray,
-    GrowthPolicy,
-    doubling,
-)
+from cs_survival_kit.data_structures.dynamic_array import DynamicArray
 
 
 class List[T](DynamicArray[T]):
     """The default list: a `DynamicArray` under a name that says "just a list".
 
-    `List` adds nothing to `DynamicArray` except a constructor that takes
-    the initial elements, so that `List([3, 1, 2])` reads like `list`.
-    Everything else, including every cost, is `DynamicArray`'s, and the
-    full table is in its docstring. If a better general-purpose list is ever
-    added to the kit, this is the name that will point at it; code written
-    against `List` is written against "the default", not against one
-    implementation.
+    `List` adds nothing to `DynamicArray`; it is the name. Every operation
+    and every cost is `DynamicArray`'s, and the full table is in its
+    docstring. The name exists so that code can say which it means: a
+    `DynamicArray` because it wants an array, or a `List` because it wants
+    the default. If a better general-purpose list is ever added to the kit,
+    this is the name that will point at it.
 
     Complexity:
         The same as `DynamicArray`. The operations that make it the default:
@@ -48,9 +41,8 @@ class List[T](DynamicArray[T]):
         after the position shift. Constructing from `items` is O(n).
 
     Args:
-        items: The initial elements, in order. Each is appended, so the
-            array grows by the policy as it fills.
-        capacity: The number of slots to allocate before any grow, as for
+        items: Elements to add to the new list, in order. Defaults to empty.
+        capacity: The number of slots to allocate up front, as for
             `DynamicArray`.
         growth: The growth policy, as for `DynamicArray`. Doubling by
             default.
@@ -78,14 +70,3 @@ class List[T](DynamicArray[T]):
         >>> isinstance(a, Sortable)
         True
     """
-
-    def __init__(
-        self,
-        items: Iterable[T] = (),
-        *,
-        capacity: int = 4,
-        growth: GrowthPolicy = doubling,
-    ) -> None:
-        super().__init__(capacity=capacity, growth=growth)
-        for item in items:
-            self.append(item)

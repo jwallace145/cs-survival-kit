@@ -9,7 +9,7 @@ policies give amortized O(n) appends.
 
 import math
 import typing
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 
 from cs_survival_kit.data_structures.abstract_list import AbstractList
 
@@ -171,6 +171,8 @@ class DynamicArray[T](AbstractList[T]):
         capacity below 2n once the array has grown past its initial capacity.
 
     Args:
+        items: Elements to add to the new array, in order. Defaults to empty.
+            Each is appended, so the array grows by the policy as it fills.
         capacity: The number of slots to allocate up front. Must be at least 1.
         growth: The growth policy that computes the new capacity on each
             resize. Must return a value greater than its input. Defaults to
@@ -180,6 +182,9 @@ class DynamicArray[T](AbstractList[T]):
         ValueError: If `capacity` is less than 1.
 
     Examples:
+        >>> DynamicArray([1, 2, 3])
+        DynamicArray([1, 2, 3])
+
         >>> a = DynamicArray[int](capacity=2)
         >>> a.append(1)
         >>> a.append(2)
@@ -198,7 +203,13 @@ class DynamicArray[T](AbstractList[T]):
         [10, 15, 2]
     """
 
-    def __init__(self, capacity: int = 4, growth: GrowthPolicy = doubling) -> None:
+    def __init__(
+        self,
+        items: Iterable[T] = (),
+        *,
+        capacity: int = 4,
+        growth: GrowthPolicy = doubling,
+    ) -> None:
         if capacity <= 0:
             raise ValueError("capacity must be greater than 0")
 
@@ -206,6 +217,9 @@ class DynamicArray[T](AbstractList[T]):
         self._capacity: int = capacity
         self._size: int = 0
         self._growth: GrowthPolicy = growth
+
+        for item in items:
+            self.append(item)
 
     @property
     def capacity(self) -> int:
