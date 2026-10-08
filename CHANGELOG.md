@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.7.0...v0.8.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ds:** add List as the default list and construct DynamicArray from items ([#28](https://github.com/jwallace145/cs-survival-kit/issues/28))
+
+### Features
+
+* **algo:** add sorting interface and stub insertion sort ([#26](https://github.com/jwallace145/cs-survival-kit/issues/26)) ([5689c71](https://github.com/jwallace145/cs-survival-kit/commit/5689c71ecbb73b783db6e03f6733bd9b2059bfed))
+* **ds:** add List as the default list and construct DynamicArray from items ([#28](https://github.com/jwallace145/cs-survival-kit/issues/28)) ([6f1d072](https://github.com/jwallace145/cs-survival-kit/commit/6f1d07288147c957000636c14cd6fce2fb21554b))
+
 ## [0.7.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.6.0...v0.7.0) (2026-10-06)
 
 
