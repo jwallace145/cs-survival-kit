@@ -10,6 +10,7 @@ from cs_survival_kit.data_structures.dynamic_array import (
     doubling,
     geometric,
 )
+from cs_survival_kit.data_structures.queue import Queue
 from cs_survival_kit.data_structures.singly_linked_list import SinglyLinkedList
 from cs_survival_kit.data_structures.stack import Stack
 
@@ -19,6 +20,7 @@ __all__ = [
     "DynamicArray",
     "GrowthPolicy",
     "List",
+    "Queue",
     "SinglyLinkedList",
     "Stack",
     "additive",

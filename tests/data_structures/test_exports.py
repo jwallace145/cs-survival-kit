@@ -49,3 +49,10 @@ def test_stack_is_exported_from_the_package():
 
     assert "Stack" in data_structures.__all__
     assert Stack is stack.Stack
+
+
+def test_queue_is_exported_from_the_package():
+    from cs_survival_kit.data_structures import Queue, queue
+
+    assert "Queue" in data_structures.__all__
+    assert Queue is queue.Queue
