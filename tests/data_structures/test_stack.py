@@ -325,6 +325,15 @@ def test_repr_uses_the_subclass_name():
     assert repr(NamedStack([1])) == "NamedStack([1])"
 
 
+def test_iteration_and_repr_read_in_opposite_directions():
+    """Iteration is pop order; repr is push order, so it rebuilds the stack."""
+    stack = Stack[int]([1, 2, 3])
+
+    assert list(stack) == [3, 2, 1]
+    assert repr(stack) == "Stack([1, 2, 3])"
+    assert list(stack) == list(eval(repr(stack), {"Stack": Stack}))
+
+
 # --- Property-based -----------------------------------------------------------
 
 small_ints = st.integers(min_value=-10, max_value=10)
