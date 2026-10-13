@@ -42,3 +42,10 @@ def test_doubly_linked_list_is_exported_from_the_package():
 
     assert "DoublyLinkedList" in data_structures.__all__
     assert DoublyLinkedList is doubly_linked_list.DoublyLinkedList
+
+
+def test_stack_is_exported_from_the_package():
+    from cs_survival_kit.data_structures import Stack, stack
+
+    assert "Stack" in data_structures.__all__
+    assert Stack is stack.Stack

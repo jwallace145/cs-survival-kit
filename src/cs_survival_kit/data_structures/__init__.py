@@ -11,6 +11,7 @@ from cs_survival_kit.data_structures.dynamic_array import (
     geometric,
 )
 from cs_survival_kit.data_structures.singly_linked_list import SinglyLinkedList
+from cs_survival_kit.data_structures.stack import Stack
 
 __all__ = [
     "AbstractList",
@@ -19,6 +20,7 @@ __all__ = [
     "GrowthPolicy",
     "List",
     "SinglyLinkedList",
+    "Stack",
     "additive",
     "doubling",
     "geometric",
