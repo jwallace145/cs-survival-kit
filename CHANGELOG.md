@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.9.0...v0.10.0) (2026-10-13)
+
+
+### Features
+
+* **ds:** add queue ([#32](https://github.com/jwallace145/cs-survival-kit/issues/32)) ([93f28c6](https://github.com/jwallace145/cs-survival-kit/commit/93f28c6f28f362155fa864c44c04b0668fb94906))
+
 ## [0.9.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.8.0...v0.9.0) (2026-10-13)
 
 
