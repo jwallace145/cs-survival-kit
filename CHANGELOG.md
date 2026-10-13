@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.8.0...v0.9.0) (2026-10-13)
+
+
+### Features
+
+* **ds:** add stack ([#30](https://github.com/jwallace145/cs-survival-kit/issues/30)) ([cdd81a3](https://github.com/jwallace145/cs-survival-kit/commit/cdd81a3506dff32b4382c6c8a80543c0ae409c50))
+
 ## [0.8.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.7.0...v0.8.0) (2026-10-08)
 
 
