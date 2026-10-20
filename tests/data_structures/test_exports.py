@@ -56,3 +56,11 @@ def test_queue_is_exported_from_the_package():
 
     assert "Queue" in data_structures.__all__
     assert Queue is queue.Queue
+
+
+def test_heap_names_are_exported_from_the_package():
+    from cs_survival_kit.data_structures import heap
+
+    for name in ["Heap", "MinHeap", "MaxHeap"]:
+        assert name in data_structures.__all__
+        assert getattr(data_structures, name) is getattr(heap, name)
