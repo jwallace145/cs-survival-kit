@@ -11,6 +11,7 @@ from cs_survival_kit.algorithms.sorting import (
     Sortable,
     SortAlgorithm,
     SupportsLessThan,
+    heap_sort,
     insertion_sort,
     sortable,
 )
@@ -20,13 +21,11 @@ from cs_survival_kit.data_structures import (
     SinglyLinkedList,
 )
 
-# The package attribute `insertion_sort` is the function, which shadows the
-# submodule of the same name, so the module is reached by its dotted path.
-insertion_sort_module = importlib.import_module(
-    "cs_survival_kit.algorithms.sorting.insertion_sort"
-)
+# A package attribute such as `insertion_sort` is the function, which shadows
+# the submodule of the same name, so each module is reached by its dotted path.
+SORTS = {"heap_sort": heap_sort, "insertion_sort": insertion_sort}
 
-SORTERS = [insertion_sort]
+SORTERS = list(SORTS.values())
 
 
 def dynamic_array(*items: int) -> DynamicArray[int]:
@@ -42,9 +41,13 @@ def test_protocols_are_exported_from_the_sorting_package():
         assert getattr(sorting, name) is getattr(sortable, name)
 
 
-def test_insertion_sort_is_exported_from_the_sorting_package():
-    assert "insertion_sort" in sorting.__all__
-    assert insertion_sort is insertion_sort_module.insertion_sort
+@pytest.mark.parametrize(("name", "sorter"), SORTS.items(), ids=SORTS)
+def test_every_sort_is_exported_from_the_sorting_package(
+    name: str, sorter: SortAlgorithm
+):
+    module = importlib.import_module(f"cs_survival_kit.algorithms.sorting.{name}")
+    assert name in sorting.__all__
+    assert sorter is getattr(module, name)
 
 
 def test_algorithms_package_re_exports_every_sorting_name():
