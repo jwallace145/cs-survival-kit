@@ -48,10 +48,12 @@ def heap_sort[T](
     The sort is not stable. A pop moves the last node to the root and
     sifts it down past every node it does not outrank, and nodes with
     equal keys do not outrank each other, so two equal elements can leave
-    the heap in either order. The sort is not adaptive either. Sorted
-    input makes heapify do no swaps, but every pop still sends a leaf to
-    the root and sinks it nearly all the way back, which is where the
-    O(n log n) is spent, so the best case costs the same as the worst.
+    the heap in either order. The sort is not adaptive to order either.
+    Sorted input makes heapify do no swaps, but every pop still sends a
+    leaf to the root and sinks it nearly all the way back, which is where
+    the O(n log n) is spent, so sorted input costs the same as reversed.
+    The one cheap input is all keys equal: nothing outranks anything,
+    every sift stops at its first comparison, and the whole sort is O(n).
 
     Args:
         items: The sequence to sort. It is rearranged; nothing is added
@@ -62,20 +64,22 @@ def heap_sort[T](
         reverse: If true, sort in descending order.
 
     Complexity:
-        | Case                 | Comparisons | Writes | Space |
-        | -------------------- | ----------- | ------ | ----- |
-        | Best (sorted input)  | O(n log n)  | O(n)   | O(n)  |
-        | Average              | O(n log n)  | O(n)   | O(n)  |
-        | Worst                | O(n log n)  | O(n)   | O(n)  |
+        | Case                  | Comparisons | Writes | Space |
+        | --------------------- | ----------- | ------ | ----- |
+        | Best (all keys equal) | O(n)        | O(n)   | O(n)  |
+        | Average               | O(n log n)  | O(n)   | O(n)  |
+        | Worst                 | O(n log n)  | O(n)   | O(n)  |
 
         - Stable: No. Elements with equal keys may change order.
-        - Adaptive: No. Sorted input costs the same as reversed input.
+        - Adaptive: No. Sorted input costs the same as reversed input;
+          only equal keys are cheap, and that is ties, not order.
         - In place: No. `items` is sorted in place, but the heap holds a
           second copy of every element beside its key, O(n) auxiliary
           space.
 
         Comparisons are the heap's: fewer than 2n to heapify, then at most
-        2 ⌊log₂ n⌋ per pop, about 2n log₂ n in every case. Writes counts
+        2 ⌊log₂ n⌋ per pop, about 2n log₂ n on any input without many
+        ties. Writes counts
         writes to `items`, exactly n, one per slot; the heap's own swaps,
         O(n log n) of them, happen in its private array. On a linked list
         the n reads and n writes by index each walk O(i) nodes, so phase

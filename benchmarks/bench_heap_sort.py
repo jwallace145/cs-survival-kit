@@ -10,11 +10,14 @@ costs against the standard library, which sorts in C:
   between them are constant factors: the kit sifts in Python, `heapq`
   sifts in C, and Timsort does fewer comparisons than either.
 - `heap_sort.inputs`: the kit's `heap_sort` on shuffled, ascending,
-  descending and all-equal input. The lines overlap, which is the whole
-  point: heap sort is not adaptive. Sorted input saves heapify its swaps,
-  but every pop still sinks a leaf from the root nearly to the bottom, and
-  that is where the time goes. An adaptive sort such as insertion sort
-  would show a flat line for ascending input here.
+  descending and all-equal input. The first three lines overlap, which is
+  the point: heap sort is not adaptive to order. Sorted input saves
+  heapify its swaps, but every pop still sinks a leaf from the root nearly
+  to the bottom, and that is where the time goes. An adaptive sort such as
+  insertion sort would show a flat line for ascending input here. The
+  all-equal line is the exception, flat and far below: when nothing
+  outranks anything every sift stops at its first comparison, and the
+  sort is O(n). That is the best case, and it comes from ties, not order.
 - `heap_sort.sequences`: the same sort over a `list`, a `DynamicArray`, a
   `DoublyLinkedList` and a `SinglyLinkedList`. The sort reads and writes
   by index, once per element each way, and the `Sortable` contract assumes
