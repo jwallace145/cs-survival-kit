@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.12.0...v0.13.0) (2026-10-21)
+
+
+### Features
+
+* **algo:** add heap sort ([#38](https://github.com/jwallace145/cs-survival-kit/issues/38)) ([62dd6e9](https://github.com/jwallace145/cs-survival-kit/commit/62dd6e924a08e5ff6bfb5908d42bb8f5a8d309d5))
+
 ## [0.12.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.11.0...v0.12.0) (2026-10-21)
 
 
