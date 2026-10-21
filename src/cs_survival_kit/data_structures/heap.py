@@ -35,7 +35,7 @@ elements never need to be comparable at all.
 from collections.abc import Callable, Iterable, Iterator
 from typing import Any
 
-from cs_survival_kit.algorithms.sorting.sortable import SupportsLessThan
+from cs_survival_kit.comparable import SupportsLessThan
 from cs_survival_kit.data_structures.default_list import List
 
 

@@ -1,6 +1,8 @@
 """The sorting package's public names, and the contract its protocols express."""
 
 import importlib
+import subprocess
+import sys
 from collections.abc import Callable
 
 import pytest
@@ -48,6 +50,23 @@ def test_every_sort_is_exported_from_the_sorting_package(
     module = importlib.import_module(f"cs_survival_kit.algorithms.sorting.{name}")
     assert name in sorting.__all__
     assert sorter is getattr(module, name)
+
+
+# `data_structures.heap` needs `SupportsLessThan` and `sorting.heap_sort` needs
+# `Heap`. Each entry point must import in a fresh interpreter, whichever side
+# is reached first, or the protocol has drifted back into the cycle.
+@pytest.mark.parametrize(
+    "module",
+    [
+        "cs_survival_kit",
+        "cs_survival_kit.comparable",
+        "cs_survival_kit.data_structures.heap",
+        "cs_survival_kit.algorithms.sorting.heap_sort",
+        "cs_survival_kit.algorithms.sorting.sortable",
+    ],
+)
+def test_the_heap_and_the_sorts_import_without_a_cycle(module: str):
+    subprocess.run([sys.executable, "-c", f"import {module}"], check=True)
 
 
 def test_algorithms_package_re_exports_every_sorting_name():

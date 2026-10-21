@@ -11,29 +11,18 @@ writing by index. The built-in `list` has those, and so does every
 `AbstractList` in the kit, so one sort runs on all of them. `SortAlgorithm`
 is what a sort looks like from the outside: the same keyword arguments as
 `list.sort`, so the kit's sorts are drop-in replacements for the built-in.
+`SupportsLessThan`, what a `key` must return, is defined in
+`cs_survival_kit.comparable` because the heap needs it too, and is
+re-exported here so that `from cs_survival_kit.algorithms.sorting import
+SupportsLessThan` keeps working.
 """
 
 from collections.abc import Callable
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
+from cs_survival_kit.comparable import SupportsLessThan
 
-class SupportsLessThan(Protocol):
-    """Anything that can be compared with `<`.
-
-    A comparison sort needs exactly one question answered about its
-    elements: is this one less than that one? Numbers, strings, tuples and
-    anything else with `__lt__` can answer it. A `key` function maps each
-    element to something that can.
-
-    Complexity:
-        A sort counts calls to `<` as its unit of work. Its documented bounds
-        assume each one is O(1), which holds for numbers and short strings;
-        comparing long strings or tuples costs their common prefix.
-    """
-
-    def __lt__(self, other: Any, /) -> bool:
-        """Return whether this value sorts before `other`."""
-        ...
+__all__ = ["SortAlgorithm", "Sortable", "SupportsLessThan"]
 
 
 @runtime_checkable
