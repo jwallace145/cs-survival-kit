@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.11.0...v0.12.0) (2026-10-21)
+
+
+### Features
+
+* **bench:** add heap benchmarks ([#36](https://github.com/jwallace145/cs-survival-kit/issues/36)) ([86e77d5](https://github.com/jwallace145/cs-survival-kit/commit/86e77d58be1f8e1928a760e03b133d54c29e84f6))
+
 ## [0.11.0](https://github.com/jwallace145/cs-survival-kit/compare/v0.10.0...v0.11.0) (2026-10-21)
 
 
