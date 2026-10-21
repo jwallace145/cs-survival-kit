@@ -7,6 +7,7 @@ and runs on anything that satisfies
 `list`, and every list structure in the kit.
 """
 
+from cs_survival_kit.algorithms.sorting.heap_sort import heap_sort
 from cs_survival_kit.algorithms.sorting.insertion_sort import insertion_sort
 from cs_survival_kit.algorithms.sorting.sortable import (
     Sortable,
@@ -18,5 +19,6 @@ __all__ = [
     "SortAlgorithm",
     "Sortable",
     "SupportsLessThan",
+    "heap_sort",
     "insertion_sort",
 ]
