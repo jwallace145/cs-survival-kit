@@ -64,3 +64,32 @@ def test_heap_names_are_exported_from_the_package():
     for name in ["Heap", "MinHeap", "MaxHeap"]:
         assert name in data_structures.__all__
         assert getattr(data_structures, name) is getattr(heap, name)
+
+
+def test_abstract_map_is_exported_from_the_package():
+    from cs_survival_kit.data_structures import AbstractMap, abstract_map
+
+    assert "AbstractMap" in data_structures.__all__
+    assert AbstractMap is abstract_map.AbstractMap
+
+
+def test_chaining_hash_map_is_exported_from_the_package():
+    from cs_survival_kit.data_structures import ChainingHashMap, chaining_hash_map
+
+    assert "ChainingHashMap" in data_structures.__all__
+    assert ChainingHashMap is chaining_hash_map.ChainingHashMap
+
+
+def test_open_addressing_hash_map_names_are_exported_from_the_package():
+    from cs_survival_kit.data_structures import open_addressing_hash_map
+
+    names = [
+        "OpenAddressingHashMap",
+        "ProbeSequence",
+        "double_hashing",
+        "linear",
+        "quadratic",
+    ]
+    for name in names:
+        assert name in data_structures.__all__
+        assert getattr(data_structures, name) is getattr(open_addressing_hash_map, name)
